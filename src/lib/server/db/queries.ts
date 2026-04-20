@@ -13,7 +13,8 @@ export function getUserById(id: string) {
   return getDb().prepare('SELECT * FROM users WHERE id = ?').get(id);
 }
 
-export function getSelfUser() {
+export function getSelfUser(accountId?: string) {
+  if (accountId) return getDb().prepare('SELECT * FROM users WHERE account_id = ?').get(accountId);
   return getDb().prepare('SELECT * FROM users WHERE is_self = 1').get();
 }
 

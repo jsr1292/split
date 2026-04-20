@@ -1,8 +1,8 @@
 import type { PageServerLoad } from './$types';
 import { getGroupById, getGroupMembers, getExpensesByGroup, getGroupBalances, getSettlements, getUserBalanceInGroup, getSelfUser, getDb } from '$lib/server/db/queries';
 
-export const load: PageServerLoad = async ({ params }) => {
-  const self = getSelfUser() as any;
+export const load: PageServerLoad = async ({ params, locals }) => {
+  const self = getSelfUser(locals.user?.id) as any;
   const group = getGroupById(params.id) as any;
   if (!group) return { group: null };
 

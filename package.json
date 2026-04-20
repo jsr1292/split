@@ -27,6 +27,7 @@
 	},
 	"dependencies": {
 		"better-sqlite3": "^12.9.0",
+		"canvas": "^3.2.3",
 		"uuid": "^14.0.0"
 	}
 }

@@ -10,12 +10,13 @@
 
   let currentPath = $state('');
   $effect(() => { currentPath = $page.url.pathname; });
-  let showFab = $derived(currentPath && !currentPath.includes('/expense/new') && !currentPath.includes('/edit') && !currentPath.includes('/groups/new'));
+  let showFab = $derived(currentPath && !currentPath.includes('/expense/new') && !currentPath.includes('/edit') && !currentPath.includes('/groups/new') && !currentPath.includes('/auth'));
   let fabHref = $derived(() => {
     const match = currentPath.match(/^\/groups\/([\w-]+)$/);
     if (match) return `/expense/new?group=${match[1]}`;
     return '/expense/new';
   });
+  let isAuthPage = $derived(currentPath.startsWith('/auth'));
 
   function isActive(path: string) {
     if (path === '/') return currentPath === '/';
@@ -29,6 +30,7 @@
   ];
 </script>
 
+{#if !isAuthPage}
 <div style="background: var(--bg); min-height: 100dvh; padding-bottom: 80px;">
 
   <!-- Header -->
@@ -74,3 +76,8 @@
   <!-- FAB -->
   <a href={fabHref()} class="btn-fab" style="{showFab ? '' : 'display: none;'}" title="Añadir gasto">+</a>
 </div>
+{:else}
+  <div style="background: var(--bg); min-height: 100dvh;">
+    {@render children()}
+  </div>
+{/if}
