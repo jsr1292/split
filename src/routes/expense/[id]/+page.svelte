@@ -41,6 +41,9 @@
     <div style="font-size: 9px; color: var(--text3); letter-spacing: 0.1em; text-transform: uppercase;">
       {new Date(exp.date).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}
     </div>
+    {#if exp.recurring}
+      <div style="margin-top: 6px; font-size: 10px; color: var(--gold);">🔄 {exp.recurring === 'weekly' ? 'Semanal' : exp.recurring === 'monthly' ? 'Mensual' : 'Anual'}</div>
+    {/if}
   </div>
 
   <!-- Who paid -->
@@ -66,6 +69,29 @@
       </div>
     {/each}
   </div>
+
+  <!-- Items breakdown -->
+  {#if data.items && data.items.length > 0}
+    <div style="margin-bottom: 16px;">
+      <div class="section-header">Artículos</div>
+      {#each data.items as item}
+        <div class="glass-card-static" style="padding: 10px 14px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <div style="font-size: 12px; font-weight: 500;">{item.description}</div>
+            <div style="font-family: 'Libre Baskerville', Georgia, serif; font-size: 13px; font-weight: 600; color: var(--gold);">{fmt(item.amount)}</div>
+          </div>
+          <div style="display: flex; flex-wrap: wrap; gap: 4px;">
+            {#each item.splits as split}
+              <div style="display: flex; align-items: center; gap: 4px; font-size: 9px; color: var(--text3);">
+                <span style="width: 14px; height: 14px; border-radius: 50%; background: {split.user_color}; display: inline-flex; align-items: center; justify-content: center; font-size: 7px; font-weight: 700; color: #0a0d14;">{split.user_name[0]}</span>
+                {split.user_name}: {fmt(split.share)}
+              </div>
+            {/each}
+          </div>
+        </div>
+      {/each}
+    </div>
+  {/if}
 
   <!-- Note -->
   {#if exp.note}

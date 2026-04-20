@@ -55,6 +55,39 @@
     { path: '/groups', label: 'Grupos', icon: 'users' },
     { path: '/people', label: 'Personas', icon: 'user' },
   ];
+
+  // Offline badge
+  let isOnline = $state(true);
+  let toast = $state<{ message: string; type: 'success' | 'info' } | null>(null);
+  let toastTimeout: ReturnType<typeof setTimeout>;
+
+  if (browser) {
+    isOnline = navigator.onLine;
+    window.addEventListener('online', () => { isOnline = true; });
+    window.addEventListener('offline', () => { isOnline = false; });
+
+    // Listen for sync complete from service worker
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.addEventListener('message', (e) => {
+        if (e.data.type === 'SYNC_COMPLETE') {
+          showToast('Sincronizado', 'success');
+          // Reload to show new data
+          window.location.reload();
+        }
+      });
+    }
+  }
+
+  function showToast(message: string, type: 'success' | 'info' = 'success') {
+    clearTimeout(toastTimeout);
+    toast = { message, type };
+    toastTimeout = setTimeout(() => { toast = null; }, 3000);
+  }
+
+  // Expose showToast globally for use by pages
+  if (browser) {
+    (window as any).showOfflineToast = () => showToast('Guardado localmente', 'info');
+  }
 </script>
 
 {#if !isAuthPage}
@@ -71,6 +104,9 @@
         <a href="/search" style="color: var(--text3);">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35" stroke-linecap="round"/></svg>
         </a>
+        {#if !isOnline}
+          <span style="background: rgba(255,77,106,0.15); border: 1px solid rgba(255,77,106,0.3); border-radius: 4px; padding: 2px 6px; font-size: 8px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--red);">Offline</span>
+        {/if}
         <button class="theme-toggle" onclick={cycleTheme}>{themeIcons[currentTheme]}</button>
         <span style="font-size: 10px; color: var(--text3); letter-spacing: 0.05em;">{data.user?.name || ''}</span>
         <div class="avatar user-menu-trigger" style="background: var(--gold); cursor: pointer; position: relative;" onclick={() => showUserMenu = !showUserMenu} role="button" tabindex="0" onkeydown={(e) => e.key === 'Enter' && (showUserMenu = !showUserMenu)}>{data.user?.name?.[0] || '?'}</div>
@@ -115,6 +151,13 @@
 
   <!-- FAB -->
   <a href={fabHref()} class="btn-fab" style="{showFab ? '' : 'display: none;'}" title="Añadir gasto">+</a>
+
+  <!-- Toast -->
+  {#if toast}
+    <div style="position: fixed; top: {`calc(56px + max(env(safe-area-inset-top), 12px) + 8px)`}; left: 50%; transform: translateX(-50%); z-index: 500; background: {toast.type === 'success' ? 'rgba(0,229,160,0.15)' : 'rgba(201,168,76,0.15)'}; border: 1px solid {toast.type === 'success' ? 'rgba(0,229,160,0.3)' : 'rgba(201,168,76,0.3)'}; border-radius: 8px; padding: 8px 16px; font-size: 11px; color: {toast.type === 'success' ? 'var(--green)' : 'var(--gold)'}; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); transition: opacity 0.2s;" role="status">
+      {toast.message}
+    </div>
+  {/if}
 </div>
 {:else}
   <div style="background: var(--bg); min-height: 100dvh;">

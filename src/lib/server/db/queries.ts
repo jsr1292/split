@@ -112,19 +112,40 @@ export function getSharedExpenses(selfId: string, personId: string) {
   `).all(selfId, personId, selfId, personId);
 }
 
+export function deleteExpense(id: string) {
+  const db = getDb();
+  db.prepare('DELETE FROM expense_splits WHERE expense_id = ?').run(id);
+  db.prepare('DELETE FROM expense_items WHERE expense_id = ?').run(id);
+  db.prepare('DELETE FROM expenses WHERE id = ?').run(id);
+}
+
+export function getExpenseItems(expenseId: string) {
+  return getDb().prepare('SELECT * FROM expense_items WHERE expense_id = ?').all(expenseId);
+}
+
+export function getExpenseItemSplits(itemId: string) {
+  return getDb().prepare(`
+    SELECT eis.*, u.name as user_name, u.avatar_color as user_color
+    FROM expense_item_splits eis
+    JOIN users u ON eis.user_id = u.id
+    WHERE eis.item_id = ?
+  `).all(itemId);
+}
+
 export function createExpense(
   groupId: string, description: string, amount: number, paidBy: string,
   splitType: string, category: string, date: string, splitUserIds: string[],
-  exactShares?: Record<string, number>, createdBy?: string, note?: string
+  exactShares?: Record<string, number>, createdBy?: string, note?: string,
+  recurring?: string, recurringParentId?: string
 ) {
   const db = getDb();
   const id = uuid();
 
   const insert = db.transaction(() => {
     db.prepare(`
-      INSERT INTO expenses (id, group_id, description, amount, paid_by, split_type, category, date, note, created_by)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(id, groupId, description, amount, paidBy, splitType, category, date, note || null, createdBy || null);
+      INSERT INTO expenses (id, group_id, description, amount, paid_by, split_type, category, date, note, created_by, recurring, recurring_parent_id)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(id, groupId, description, amount, paidBy, splitType, category, date, note || null, createdBy || null, recurring || null, recurringParentId || null);
 
     // Calculate shares
     const insertSplit = db.prepare('INSERT INTO expense_splits (id, expense_id, user_id, share) VALUES (?, ?, ?, ?)');
@@ -144,10 +165,72 @@ export function createExpense(
   return getExpenseById(id);
 }
 
-export function deleteExpense(id: string) {
+export function createRecurringInstances(parentExpense: any, recurring: string) {
   const db = getDb();
-  db.prepare('DELETE FROM expense_splits WHERE expense_id = ?').run(id);
-  db.prepare('DELETE FROM expenses WHERE id = ?').run(id);
+  const parentId = parentExpense.id;
+  const groupId = parentExpense.group_id;
+  const description = parentExpense.description;
+  const amount = parentExpense.amount;
+  const paidBy = parentExpense.paid_by;
+  const splitType = parentExpense.split_type || 'equal';
+  const category = parentExpense.category;
+  const note = parentExpense.note;
+  const createdBy = parentExpense.created_by;
+
+  // Get splits for this expense
+  const splits = getExpenseSplits(parentId);
+  const splitUserIds = splits.map((s: any) => s.user_id);
+
+  let nextDate = new Date(parentExpense.date);
+  const instances: any[] = [];
+
+  for (let i = 0; i < 12; i++) {
+    if (recurring === 'weekly') nextDate.setDate(nextDate.getDate() + 7);
+    else if (recurring === 'monthly') nextDate.setMonth(nextDate.getMonth() + 1);
+    else if (recurring === 'yearly') nextDate.setFullYear(nextDate.getFullYear() + 1);
+    else break;
+
+    const dateStr = nextDate.toISOString().split('T')[0];
+    const inst = createExpense(groupId, description, amount, paidBy, splitType, category, dateStr, splitUserIds, undefined, createdBy, note, null, parentId);
+    instances.push(inst);
+  }
+
+  return instances;
+}
+
+export function createExpenseWithItems(
+  groupId: string, description: string, amount: number, paidBy: string,
+  splitType: string, category: string, date: string, splitUserIds: string[],
+  createdBy: string, note: string, items: { description: string; amount: number; splitUserIds: string[] }[],
+  recurring?: string
+) {
+  const db = getDb();
+  const id = uuid();
+
+  const insert = db.transaction(() => {
+    db.prepare(`
+      INSERT INTO expenses (id, group_id, description, amount, paid_by, split_type, category, date, note, created_by, recurring)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(id, groupId, description, amount, paidBy, splitType, category, date, note || null, createdBy || null, recurring || null);
+
+    // Insert items
+    const insertItem = db.prepare('INSERT INTO expense_items (id, expense_id, description, amount) VALUES (?, ?, ?, ?)');
+    const insertItemSplit = db.prepare('INSERT INTO expense_item_splits (id, item_id, user_id, share) VALUES (?, ?, ?, ?)');
+
+    for (const item of items) {
+      const itemId = uuid();
+      insertItem.run(itemId, id, item.description, item.amount);
+
+      const itemSplitCount = item.splitUserIds.length;
+      for (const uid of item.splitUserIds) {
+        const share = Math.round((item.amount / itemSplitCount) * 100) / 100;
+        insertItemSplit.run(uuid(), itemId, uid, share);
+      }
+    }
+  });
+
+  insert();
+  return getExpenseById(id);
 }
 
 export function updateExpense(

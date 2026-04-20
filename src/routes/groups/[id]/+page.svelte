@@ -147,6 +147,20 @@
     </div>
   </div>
 
+  <!-- Who Should Pay Next -->
+  {#if data.suggestedPayer}
+    <div class="glass-card-static" style="display: flex; align-items: center; gap: 10px; padding: 10px 14px; margin-bottom: 12px; background: rgba(201,168,76,0.05); border-color: rgba(201,168,76,0.15);">
+      <span style="font-size: 18px;">💡</span>
+      <div style="flex: 1;">
+        <div style="font-size: 10px; color: var(--text3); letter-spacing: 0.05em;">Siguiente pago</div>
+        <div style="font-size: 12px; font-weight: 600; color: var(--text2);">
+          <span style="width: 20px; height: 20px; border-radius: 50%; background: {data.suggestedPayer.avatar_color}; display: inline-flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 700; color: #0a0d14; margin-right: 4px;">{data.suggestedPayer.name[0]}</span>
+          {data.suggestedPayer.name} debería pagar la próxima cuenta
+        </div>
+      </div>
+    </div>
+  {/if}
+
   <!-- Category Breakdown -->
   {#if data.categories.length > 0}
     <div style="margin-bottom: 16px;">
@@ -308,9 +322,15 @@
         <div class="glass-card" style="display: flex; align-items: center; gap: 12px; padding: 10px 14px;">
           <div style="font-size: 20px; width: 30px; text-align: center; flex-shrink: 0;">{categories[exp.category] || '📌'}</div>
           <div style="flex: 1; min-width: 0;">
-            <div style="font-weight: 500; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{exp.description}</div>
+            <div style="font-weight: 500; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+              {exp.description}
+              {#if exp.recurring}
+                <span title="{exp.recurring === 'weekly' ? 'Semanal' : exp.recurring === 'monthly' ? 'Mensual' : 'Anual'}" style="margin-left: 4px; font-size: 10px;">🔄</span>
+              {/if}
+            </div>
             <div style="font-size: 9px; color: var(--text3); letter-spacing: 0.05em; margin-top: 1px;">
               {new Date(exp.date).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })} · pagó {exp.paid_by_name}
+              {#if exp.recurring_parent_id}<span style="color: var(--gold-dim);"> ·实例</span>{/if}
             </div>
           </div>
           <div style="font-family: 'Libre Baskerville', Georgia, serif; font-weight: 600; font-size: 13px;">{fmt(exp.amount)}</div>

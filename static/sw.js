@@ -5,6 +5,80 @@ const PRECACHE = [
   '/people',
   '/manifest.json',
 ];
+const OFFLINE_QUEUE_KEY = 'split_offline_queue';
+
+// IndexedDB helpers
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open('split_offline', 1);
+    req.onerror = () => reject(req.error);
+    req.onsuccess = () => resolve(req.result);
+    req.onupgradeneeded = (e) => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains('queue')) {
+        db.createObjectStore('queue', { keyPath: 'id', autoIncrement: true });
+      }
+    };
+  });
+}
+
+async function addToQueue(data) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('queue', 'readwrite');
+    const store = tx.objectStore('queue');
+    const req = store.add({ ...data, timestamp: Date.now() });
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function getQueue() {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('queue', 'readonly');
+    const store = tx.objectStore('queue');
+    const req = store.getAll();
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function clearQueue() {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('queue', 'readwrite');
+    const store = tx.objectStore('queue');
+    const req = store.clear();
+    req.onsuccess = () => resolve();
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function syncQueue() {
+  const queue = await getQueue();
+  if (!queue || queue.length === 0) return;
+
+  for (const item of queue) {
+    try {
+      await fetch('/api/expenses', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(item.data)
+      });
+    } catch (e) {
+      // If any fails, stop and keep remaining
+      break;
+    }
+  }
+  await clearQueue();
+
+  // Notify clients that sync is done
+  const clients = await self.clients.matchAll();
+  for (const client of clients) {
+    client.postMessage({ type: 'SYNC_COMPLETE' });
+  }
+}
 
 self.addEventListener('install', (e) => {
   e.waitUntil(
@@ -22,7 +96,24 @@ self.addEventListener('activate', (e) => {
 
 self.addEventListener('fetch', (e) => {
   const url = new URL(e.request.url);
-  
+
+  // Intercept POST to /api/expenses for offline queueing
+  if (e.request.method === 'POST' && url.pathname === '/api/expenses') {
+    e.respondWith(
+      fetch(e.request.clone()).catch(async () => {
+        // Offline: queue the request
+        const data = await e.request.clone().json();
+        await addToQueue(data);
+        // Return a fake success response
+        return new Response(JSON.stringify({ queued: true, offline: true }), {
+          status: 202,
+          headers: { 'Content-Type': 'application/json' }
+        });
+      })
+    );
+    return;
+  }
+
   // API calls: network first
   if (url.pathname.startsWith('/api/')) {
     e.respondWith(
@@ -49,4 +140,9 @@ self.addEventListener('fetch', (e) => {
       return res;
     }))
   );
+});
+
+// Listen for online event to trigger sync
+self.addEventListener('online', () => {
+  syncQueue();
 });

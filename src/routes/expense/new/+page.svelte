@@ -63,25 +63,84 @@
     }
   }
 
+  // Recurring state
+  let recurring = $state('no');
+  const recurringOptions = [
+    { value: 'no', label: 'No repetir' },
+    { value: 'weekly', label: 'Semanal' },
+    { value: 'monthly', label: 'Mensual' },
+    { value: 'yearly', label: 'Anual' },
+  ];
+
+  // Items state
+  let splitMode = $state<'total' | 'items'>('total');
+  let items = $state<{ description: string; amount: string; splitUserIds: string[] }[]>([]);
+
+  function addItem() {
+    items = [...items, { description: '', amount: '', splitUserIds: [...selectedMembers] }];
+  }
+
+  function removeItem(i: number) {
+    items = items.filter((_, idx) => idx !== i);
+  }
+
+  function toggleItemMember(i: number, uid: string) {
+    items = items.map((item, idx) => {
+      if (idx !== i) return item;
+      const newSplit = item.splitUserIds.includes(uid)
+        ? item.splitUserIds.filter((id: string) => id !== uid)
+        : [...item.splitUserIds, uid];
+      return { ...item, splitUserIds: newSplit };
+    });
+  }
+
+  let computedItemsTotal = $derived.by(() => {
+    let total = 0;
+    for (const item of items) {
+      const amt = parseFloat(item.amount.replace(',', '.'));
+      if (!isNaN(amt) && amt > 0) total += amt;
+    }
+    return Math.round(total * 100) / 100;
+  });
+
   async function submit() {
     if (!description || !amount || !groupId || !paidBy || selectedMembers.length === 0) {
       error = 'Completa todos los campos';
       return;
     }
+    if (splitMode === 'items' && items.length > 0) {
+      const validItems = items.filter(i => i.description && i.amount && i.splitUserIds.length > 0);
+      if (validItems.length === 0) { error = 'Añade al menos un artículo válido'; return; }
+    }
     saving = true;
     error = '';
     try {
+      let payload: any = {
+        groupId, description, amount: computedAmount || parseFloat(amount),
+        paidBy, category, date, note,
+        splitUserIds: selectedMembers, createdBy: data.self?.id,
+        recurring: recurring === 'no' ? null : recurring
+      };
+      if (splitMode === 'items' && items.length > 0) {
+        payload.items = items.map(i => ({
+          description: i.description,
+          amount: parseFloat(i.amount.replace(',', '.')),
+          splitUserIds: i.splitUserIds
+        }));
+      }
       const res = await fetch('/api/expenses', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          groupId, description, amount: computedAmount || parseFloat(amount),
-          paidBy, category, date, note,
-          splitUserIds: selectedMembers, createdBy: data.self?.id
-        })
+        body: JSON.stringify(payload)
       });
       if (res.ok) {
         window.location.href = `/groups/${groupId}`;
+      } else if (res.status === 202) {
+        // Queued offline
+        if (typeof window !== 'undefined' && (window as any).showOfflineToast) {
+          (window as any).showOfflineToast();
+        }
+        setTimeout(() => { window.location.href = `/groups/${groupId}`; }, 1500);
       } else {
         const err = await res.json();
         error = err.error || 'Error al guardar';
@@ -226,6 +285,63 @@
   <label for="date">Fecha</label>
   <input id="date" type="date" bind:value={date} />
 </div>
+
+<div class="form-group">
+  <label for="recurring">Repetir</label>
+  <select id="recurring" bind:value={recurring}>
+    {#each recurringOptions as opt}
+      <option value={opt.value}>{opt.label}</option>
+    {/each}
+  </select>
+</div>
+
+<div class="form-group">
+  <label>Modo de reparto</label>
+  <div style="display: flex; gap: 6px;">
+    <button
+      onclick={() => splitMode = 'total'}
+      style="flex:1; padding: 8px; border-radius: 6px; border: 1px solid {splitMode === 'total' ? 'var(--gold)' : 'var(--border)'}; background: {splitMode === 'total' ? 'rgba(201,168,76,0.1)' : 'transparent'}; color: {splitMode === 'total' ? 'var(--gold)' : 'var(--text3)'}; font-family: inherit; font-size: 11px; cursor: pointer; transition: all 0.15s;"
+    >Importe total</button>
+    <button
+      onclick={() => splitMode = 'items'}
+      style="flex:1; padding: 8px; border-radius: 6px; border: 1px solid {splitMode === 'items' ? 'var(--gold)' : 'var(--border)'}; background: {splitMode === 'items' ? 'rgba(201,168,76,0.1)' : 'transparent'}; color: {splitMode === 'items' ? 'var(--gold)' : 'var(--text3)'}; font-family: inherit; font-size: 11px; cursor: pointer; transition: all 0.15s;"
+    >Por artículos</button>
+  </div>
+</div>
+
+{#if splitMode === 'items'}
+  <div class="form-group">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+      <label style="margin-bottom: 0;">Artículos</label>
+      <button onclick={addItem} style="background: none; border: 1px solid var(--gold-dim); border-radius: 4px; color: var(--gold); font-size: 10px; padding: 3px 8px; cursor: pointer; font-family: inherit;">+ Añadir</button>
+    </div>
+    {#each items as item, i}
+      <div style="background: var(--bg2); border: 1px solid var(--border); border-radius: 6px; padding: 10px; margin-bottom: 8px;">
+        <div style="display: flex; gap: 6px; margin-bottom: 6px;">
+          <input type="text" placeholder="Descripción" bind:value={item.description} style="flex: 1; font-size: 13px; padding: 7px 9px;" />
+          <input type="text" inputmode="decimal" placeholder="€" bind:value={item.amount} style="width: 70px; font-size: 13px; padding: 7px 9px; text-align: right; font-family: 'Libre Baskerville', Georgia, serif;" />
+          <button onclick={() => removeItem(i)} style="background: none; border: none; color: var(--red); cursor: pointer; font-size: 14px; padding: 4px;">✕</button>
+        </div>
+        <div style="display: flex; flex-wrap: wrap; gap: 4px;">
+          {#each currentMembers as m}
+            <button
+              onclick={() => toggleItemMember(i, m.id)}
+              style="display: flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 12px; border: 1px solid {item.splitUserIds.includes(m.id) ? 'var(--gold)' : 'var(--border)'}; background: {item.splitUserIds.includes(m.id) ? 'rgba(201,168,76,0.1)' : 'transparent'}; cursor: pointer; color: {item.splitUserIds.includes(m.id) ? 'var(--gold)' : 'var(--text3)'}; font-family: inherit; font-size: 9px; transition: all 0.15s;"
+            >
+              <span style="width: 14px; height: 14px; border-radius: 50%; background: {m.avatar_color}; display: flex; align-items: center; justify-content: center; font-size: 7px; font-weight: 700; color: #0a0d14;">{m.name[0]}</span>
+              {m.name}
+            </button>
+          {/each}
+        </div>
+      </div>
+    {/each}
+    {#if items.length > 0}
+      <div style="text-align: right; font-size: 11px; color: var(--gold); font-family: 'Libre Baskerville', Georgia, serif;">
+        Total: {new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(computedItemsTotal)}
+      </div>
+    {/if}
+  </div>
+{/if}
 
 <div class="form-group">
   <label for="note">Nota (opcional)</label>
