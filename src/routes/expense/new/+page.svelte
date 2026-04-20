@@ -130,15 +130,42 @@
   <input id="desc" type="text" placeholder="Ej: Cena en el restaurante" bind:value={description} />
 </div>
 
-<div class="form-group">
   <label for="amount">Importe (€)</label>
-  <input id="amount" type="text" inputmode="text" placeholder="23.50 + 18.30 + 9.00" bind:value={amount} style="font-family: 'Libre Baskerville', Georgia, serif; font-size: 20px; text-align: center; padding: 14px;" />
-  {#if amount && computedAmount !== null}
-    <div style="text-align: center; margin-top: 4px; font-size: 12px; color: var(--gold); font-family: 'Libre Baskerville', Georgia, serif;">
-      = {new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(computedAmount)}
+  <div style="position: relative;">
+    <input id="amount" type="text" inputmode="decimal" placeholder="0.00" bind:value={amount} style="font-family: 'Libre Baskerville', Georgia, serif; font-size: 20px; text-align: center; padding: 14px;" />
+    <!-- Math operator bar -->
+    <div style="display: flex; gap: 0; margin-top: 6px; border-radius: 6px; overflow: hidden; border: 1px solid var(--border);">
+      {#each [
+        { label: '+', val: ' + ' },
+        { label: '−', val: ' - ' },
+        { label: '×', val: ' * ' },
+        { label: '÷', val: ' / ' },
+        { label: '(', val: '(' },
+        { label: ')', val: ')' },
+        { label: '⌫', val: 'backspace' },
+        { label: 'C', val: 'clear' },
+      ] as op}
+        <button
+          onclick={() => {
+            if (op.val === 'backspace') {
+              amount = amount.slice(0, -1);
+            } else if (op.val === 'clear') {
+              amount = '';
+            } else {
+              amount += op.val;
+            }
+            document.getElementById('amount')?.focus();
+          }}
+          style="flex: 1; padding: 10px 0; background: var(--bg2); border: none; border-right: 1px solid var(--border); color: var(--gold); font-family: 'JetBrains Mono', monospace; font-size: 16px; font-weight: 600; cursor: pointer; transition: background 0.1s;"
+        >{op.label}</button>
+      {/each}
     </div>
-  {/if}
-</div>
+    {#if amount && computedAmount !== null}
+      <div style="text-align: center; margin-top: 6px; font-size: 12px; color: var(--gold); font-family: 'Libre Baskerville', Georgia, serif;">
+        = {new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(computedAmount)}
+      </div>
+    {/if}
+  </div>
 
 <!-- Category Picker -->
 <div class="form-group">
