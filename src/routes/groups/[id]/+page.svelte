@@ -62,24 +62,38 @@
     return transactions;
   }
 
-  let suggestedSettlements = $derived(simplifyBalances(data.balances));
+  let suggestedSettlements = $state(simplifyBalances(data.balances));
+  let editedAmounts = $state<Record<number, string>>({});
+
+  function getEditedAmount(i: number, original: number) {
+    const edited = editedAmounts[i];
+    if (edited !== undefined) {
+      const parsed = parseFloat(edited.replace(',', '.'));
+      return isNaN(parsed) ? original : parsed;
+    }
+    return original;
+  }
+  let totalToSettle = $derived(suggestedSettlements.reduce((sum, s, i) => sum + getEditedAmount(i, s.amount), 0));
 
   async function confirmSettle() {
     settling = true;
     const today = new Date().toISOString().split('T')[0];
     try {
-      for (const s of suggestedSettlements) {
-        await fetch('/api/settle', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            groupId: data.group.id,
-            fromUser: s.from,
-            toUser: s.to,
-            amount: s.amount,
-            date: today
-          })
-        });
+      for (const [i, s] of suggestedSettlements.entries()) {
+        const amount = getEditedAmount(i, s.amount);
+        if (amount > 0.001) {
+          await fetch('/api/settle', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              groupId: data.group.id,
+              fromUser: s.from,
+              toUser: s.to,
+              amount,
+              date: today
+            })
+          });
+        }
       }
       window.location.reload();
     } catch {
@@ -186,24 +200,36 @@
         </div>
 
         {#each suggestedSettlements as s, i}
-          <div class="glass-card-static" style="display: flex; align-items: center; gap: 10px; padding: 12px 14px;">
+          <div class="glass-card-static" style="display: flex; align-items: center; gap: 8px; padding: 10px 12px;">
             <div style="font-size: 16px; width: 24px; text-align: center; flex-shrink: 0;">💸</div>
-            <div style="flex: 1;">
-              <div style="font-size: 12px;">
+            <div style="flex: 1; min-width: 0;">
+              <div style="font-size: 11px;">
                 <span style="font-weight: 600;" class:text-red={s.from === data.self?.id}>{s.fromName}</span>
                 <span style="color: var(--text3);"> → </span>
                 <span style="font-weight: 600;" class:text-green={s.to === data.self?.id}>{s.toName}</span>
               </div>
+              <div style="font-size: 9px; color: var(--text3);">Máximo: {fmt(s.amount)}</div>
             </div>
-            <div style="font-family: 'Libre Baskerville', Georgia, serif; font-weight: 700; font-size: 14px; color: var(--gold);">
-              {fmt(s.amount)}
+            <div style="display: flex; align-items: center; gap: 4px;">
+              <span style="color: var(--gold); font-size: 12px;">€</span>
+              <input
+                type="text"
+                inputmode="decimal"
+                value={editedAmounts[i] !== undefined ? editedAmounts[i] : s.amount.toFixed(2)}
+                oninput={(e) => { editedAmounts[i] = (e.target as HTMLInputElement).value; }}
+                style="width: 64px; background: var(--bg); border: 1px solid var(--glass-border); border-radius: 6px; color: var(--gold); font-family: 'Libre Baskerville', Georgia, serif; font-size: 13px; font-weight: 700; padding: 4px 6px; text-align: right;"
+              />
             </div>
           </div>
         {/each}
 
-        <div style="text-align: center; margin-top: 16px;">
+        <div style="margin-top: 12px; padding: 10px 12px; background: rgba(201,168,76,0.08); border: 1px solid rgba(201,168,76,0.2); border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
+          <div style="font-size: 11px; color: var(--text3);">Total a liquidar</div>
+          <div style="font-family: 'Libre Baskerville', Georgia, serif; font-size: 16px; font-weight: 700; color: var(--gold);">{fmt(totalToSettle)}</div>
+        </div>
+        <div style="text-align: center; margin-top: 12px;">
           <button class="btn-gold" style="width: 100%; padding: 12px;" onclick={confirmSettle} disabled={settling}>
-            {settling ? 'Liquidando...' : 'Confirmar liquidación'}
+            {settling ? 'Liquidando...' : 'Liquidar ' + fmt(totalToSettle)}
           </button>
         </div>
       </div>
