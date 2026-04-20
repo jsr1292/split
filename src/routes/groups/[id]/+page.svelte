@@ -19,6 +19,16 @@
   // Settle up state
   let showSettle = $state(false);
   let settling = $state(false);
+  let showInvite = $state(false);
+  let inviteLinkCopied = $state(false);
+
+  function copyInviteLink() {
+    const link = window.location.origin + '/groups/' + data.group.id + '/join';
+    navigator.clipboard.writeText(link).then(() => {
+      inviteLinkCopied = true;
+      setTimeout(() => inviteLinkCopied = false, 2000);
+    });
+  }
 
   // Simplify balances into minimum transactions (greedy algorithm)
   function simplifyBalances(balances: any[]) {
@@ -117,7 +127,10 @@
     <a href="/" style="font-size: 10px; color: var(--text3); letter-spacing: 0.05em; display: inline-flex; align-items: center; gap: 4px;">
       ← Grupos
     </a>
-    <a href="/groups/{g.id}/edit" style="font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gold);">✏️ Editar</a>
+    <div style="display: flex; gap: 10px; align-items: center;">
+      <button onclick={() => showInvite = true} style="background: none; border: none; color: var(--gold); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer;">🔗 Invitar</button>
+      <a href="/groups/{g.id}/edit" style="font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gold);">✏️</a>
+    </div>
   </div>
 
   <!-- Group Header -->
@@ -247,6 +260,32 @@
         <div style="text-align: center; margin-top: 12px;">
           <button class="btn-gold" style="width: 100%; padding: 12px;" onclick={confirmSettle} disabled={settling}>
             {settling ? 'Liquidando...' : 'Liquidar ' + fmt(totalToSettle)}
+          </button>
+        </div>
+      </div>
+    </div>
+  {/if}
+
+  <!-- Invite Modal -->
+  {#if showInvite}
+    <div style="position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 200; display: flex; align-items: flex-end; justify-content: center;" onclick={() => showInvite = false}>
+      <div style="background: var(--bg2); border-top: 1px solid var(--glass-border); border-radius: 16px 16px 0 0; width: 100%; max-width: 500px; padding: 20px;" onclick={(e) => e.stopPropagation()}>
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+          <div style="font-family: 'Libre Baskerville', Georgia, serif; font-size: 16px; font-weight: 700; color: var(--gold);">Invitar al grupo</div>
+          <button onclick={() => showInvite = false} style="background: none; border: none; color: var(--text3); font-size: 18px; cursor: pointer;">✕</button>
+        </div>
+        <div style="font-size: 12px; color: var(--text3); margin-bottom: 12px;">
+          Comparte este enlace para que otros se unan a <strong style="color: var(--text2);">{g.name}</strong>:
+        </div>
+        <div style="display: flex; gap: 8px; align-items: center;">
+          <input
+            type="text"
+            readonly
+            value={typeof window !== 'undefined' ? window.location.origin + '/groups/' + g.id + '/join' : '/groups/' + g.id + '/join'}
+            style="flex: 1; background: var(--bg); border: 1px solid var(--glass-border); border-radius: 8px; color: var(--text2); font-size: 12px; padding: 10px 12px; font-family: 'JetBrains Mono', monospace;"
+          />
+          <button onclick={copyInviteLink} style="background: var(--gold); border: none; border-radius: 8px; color: #07090f; font-size: 11px; font-weight: 700; padding: 10px 14px; cursor: pointer; white-space: nowrap;">
+            {inviteLinkCopied ? '✓ Copiado' : 'Copiar'}
           </button>
         </div>
       </div>
