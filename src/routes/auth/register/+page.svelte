@@ -11,33 +11,20 @@
     loading = true;
 
     try {
-      const res = await fetch('/auth/register', {
+      const res = await fetch('/api/auth/register', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({ name, email, password }),
-        redirect: 'manual'
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password })
       });
 
-      if (res.status === 303 || res.status === 302) {
+      const data = await res.json();
+
+      if (res.ok && data.success) {
         window.location.href = '/';
         return;
       }
 
-      if (res.ok) {
-        const data = await res.json();
-        if (data.location) {
-          window.location.href = data.location;
-          return;
-        }
-      }
-
-      // Parse error from form action
-      if (res.headers.get('content-type')?.includes('json')) {
-        const data = await res.json();
-        if (data.error) { error = data.error; return; }
-      }
-
-      error = 'Error al crear la cuenta';
+      error = data.error || 'Error al crear la cuenta';
     } catch {
       error = 'Error de conexión';
     } finally {

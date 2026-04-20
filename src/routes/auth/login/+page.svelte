@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { goto } from '$app/navigation';
+
   let email = $state('');
   let password = $state('');
   let error = $state('');
@@ -10,29 +12,21 @@
     loading = true;
 
     try {
-      const res = await fetch('/auth/login', {
+      const res = await fetch('/api/auth/login', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({ email, password }),
-        redirect: 'manual'
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
       });
 
-      if (res.status === 303 || res.status === 302) {
-        // Cookie is set by the server — just navigate
-        window.location.href = '/';
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        // Use static redirect page to break out of SvelteKit router
+        window.location.href = '/redirect.html';
         return;
       }
 
-      if (res.ok) {
-        // SvelteKit form action returned 200 with redirect JSON
-        const data = await res.json();
-        if (data.location) {
-          window.location.href = data.location;
-          return;
-        }
-      }
-
-      error = 'Error al iniciar sesión';
+      error = data.error || 'Error al iniciar sesión';
     } catch {
       error = 'Error de conexión';
     } finally {
