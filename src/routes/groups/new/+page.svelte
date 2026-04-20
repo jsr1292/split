@@ -115,7 +115,7 @@
 
   <!-- Add new person inline -->
   <div style="display: flex; gap: 6px;">
-    <input type="text" placeholder="Añadir persona..." bind:value={newMemberName} style="flex: 1;" />
+    <input type="text" inputmode="text" placeholder="Añadir persona..." bind:value={newMemberName} style="flex: 1;" />
     <button class="btn-ghost" onclick={addMember} style="white-space: nowrap;">+ Añadir</button>
   </div>
 </div>

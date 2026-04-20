@@ -15,6 +15,79 @@
     if (n < 0) return `−${fmt(Math.abs(n))}`;
     return '€0.00';
   }
+
+  // Settle up state
+  let showSettle = $state(false);
+  let settling = $state(false);
+
+  // Simplify balances into minimum transactions (greedy algorithm)
+  function simplifyBalances(balances: any[]) {
+    // Net amount per user: positive = owed money, negative = owes money
+    const net: Record<string, { name: string; amount: number }> = {};
+    for (const b of balances) {
+      if (!net[b.from_user]) net[b.from_user] = { name: b.from_name, amount: 0 };
+      if (!net[b.to_user]) net[b.to_user] = { name: b.to_name, amount: 0 };
+      net[b.from_user].amount -= b.amount;
+      net[b.to_user].amount += b.amount;
+    }
+
+    const debtors = Object.entries(net)
+      .filter(([_, v]) => v.amount < -0.01)
+      .map(([id, v]) => ({ id, name: v.name, amount: -v.amount }))
+      .sort((a, b) => b.amount - a.amount);
+
+    const creditors = Object.entries(net)
+      .filter(([_, v]) => v.amount > 0.01)
+      .map(([id, v]) => ({ id, name: v.name, amount: v.amount }))
+      .sort((a, b) => b.amount - a.amount);
+
+    const transactions: { from: string; fromName: string; to: string; toName: string; amount: number }[] = [];
+
+    let i = 0, j = 0;
+    while (i < debtors.length && j < creditors.length) {
+      const amount = Math.min(debtors[i].amount, creditors[j].amount);
+      if (amount > 0.01) {
+        transactions.push({
+          from: debtors[i].id, fromName: debtors[i].name,
+          to: creditors[j].id, toName: creditors[j].name,
+          amount: Math.round(amount * 100) / 100
+        });
+      }
+      debtors[i].amount -= amount;
+      creditors[j].amount -= amount;
+      if (debtors[i].amount < 0.01) i++;
+      if (creditors[j].amount < 0.01) j++;
+    }
+
+    return transactions;
+  }
+
+  let suggestedSettlements = $derived(simplifyBalances(data.balances));
+
+  async function confirmSettle() {
+    settling = true;
+    const today = new Date().toISOString().split('T')[0];
+    try {
+      for (const s of suggestedSettlements) {
+        await fetch('/api/settle', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            groupId: data.group.id,
+            fromUser: s.from,
+            toUser: s.to,
+            amount: s.amount,
+            date: today
+          })
+        });
+      }
+      window.location.reload();
+    } catch {
+      alert('Error al liquidar');
+    } finally {
+      settling = false;
+    }
+  }
 </script>
 
 <svelte:head>
@@ -81,7 +154,44 @@
 
       <!-- Settle Up Button -->
       <div style="text-align: center; margin-top: 12px;">
-        <button class="btn-gold" style="font-size: 9px; padding: 10px 24px;">Liquidar deudas</button>
+        <button class="btn-gold" style="font-size: 9px; padding: 10px 24px;" onclick={() => showSettle = true}>Liquidar deudas</button>
+      </div>
+    </div>
+  {/if}
+
+  <!-- Settle Up Panel -->
+  {#if showSettle && suggestedSettlements.length > 0}
+    <div style="position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 200; display: flex; align-items: flex-end; justify-content: center;" onclick={() => showSettle = false}>
+      <div style="background: var(--bg2); border-top: 1px solid var(--glass-border); border-radius: 16px 16px 0 0; width: 100%; max-width: 500px; max-height: 70vh; overflow-y: auto; padding: 20px;" onclick={(e) => e.stopPropagation()}>
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+          <div style="font-family: 'Libre Baskerville', Georgia, serif; font-size: 16px; font-weight: 700; color: var(--gold);">Liquidar deudas</div>
+          <button onclick={() => showSettle = false} style="background: none; border: none; color: var(--text3); font-size: 18px; cursor: pointer;">✕</button>
+        </div>
+        <div style="font-size: 11px; color: var(--text3); margin-bottom: 16px;">
+          Transacciones mínimas para saldar todas las deudas:
+        </div>
+
+        {#each suggestedSettlements as s, i}
+          <div class="glass-card-static" style="display: flex; align-items: center; gap: 10px; padding: 12px 14px;">
+            <div style="font-size: 16px; width: 24px; text-align: center; flex-shrink: 0;">💸</div>
+            <div style="flex: 1;">
+              <div style="font-size: 12px;">
+                <span style="font-weight: 600;" class:text-red={s.from === data.self?.id}>{s.fromName}</span>
+                <span style="color: var(--text3);"> → </span>
+                <span style="font-weight: 600;" class:text-green={s.to === data.self?.id}>{s.toName}</span>
+              </div>
+            </div>
+            <div style="font-family: 'Libre Baskerville', Georgia, serif; font-weight: 700; font-size: 14px; color: var(--gold);">
+              {fmt(s.amount)}
+            </div>
+          </div>
+        {/each}
+
+        <div style="text-align: center; margin-top: 16px;">
+          <button class="btn-gold" style="width: 100%; padding: 12px;" onclick={confirmSettle} disabled={settling}>
+            {settling ? 'Liquidando...' : 'Confirmar liquidación'}
+          </button>
+        </div>
       </div>
     </div>
   {/if}

@@ -115,7 +115,7 @@
 
 <div class="form-group">
   <label for="amount">Importe (€)</label>
-  <input id="amount" type="number" step="0.01" placeholder="0.00" bind:value={amount} style="font-family: 'Libre Baskerville', Georgia, serif; font-size: 20px; text-align: center; padding: 14px;" />
+  <input id="amount" type="text" inputmode="decimal" placeholder="0.00" bind:value={amount} style="font-family: 'Libre Baskerville', Georgia, serif; font-size: 20px; text-align: center; padding: 14px;" />
 </div>
 
 <!-- Category Picker -->
