@@ -18,42 +18,41 @@
 {#if data.dashboard}
   {@const dash = data.dashboard}
 
-  <!-- Balance Cards -->
-  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 20px;">
-    <div class="glass-card" style="text-align: center;">
-      <div class="text-xs text-muted" style="margin-bottom: 4px;">Te deben</div>
-      <div class="text-green font-bold" style="font-size: 22px;">{fmt(dash.totalOwed)}</div>
-    </div>
-    <div class="glass-card" style="text-align: center;">
-      <div class="text-xs text-muted" style="margin-bottom: 4px;">Tú debes</div>
-      <div class="text-red font-bold" style="font-size: 22px;">{fmt(dash.totalOwe)}</div>
-    </div>
-  </div>
-
-  <!-- Net Balance -->
-  <div class="glass-card" style="text-align: center; margin-bottom: 20px;">
-    <div class="text-xs text-muted" style="margin-bottom: 4px;">Balance neto</div>
-    <div class="font-bold" style="font-size: 28px;" class:text-green={dash.netBalance > 0} class:text-red={dash.netBalance < 0}>
+  <!-- Balance Summary -->
+  <div class="glass-card-static" style="margin-bottom: 12px; text-align: center; padding: 20px;">
+    <div class="stat-label" style="margin-bottom: 8px;">Balance neto</div>
+    <div class="stat-value" style="font-size: 32px;" class:text-green={dash.netBalance > 0} class:text-red={dash.netBalance < 0}>
       {dash.netBalance > 0 ? '+' : ''}{fmt(dash.netBalance)}
+    </div>
+    <div class="gold-divider"></div>
+    <div style="display: flex; justify-content: center; gap: 32px;">
+      <div>
+        <div class="text-green" style="font-size: 14px; font-weight: 700;">{fmt(dash.totalOwed)}</div>
+        <div class="stat-label">Te deben</div>
+      </div>
+      <div>
+        <div class="text-red" style="font-size: 14px; font-weight: 700;">{fmt(dash.totalOwe)}</div>
+        <div class="stat-label">Tú debes</div>
+      </div>
     </div>
   </div>
 
   <!-- Groups -->
-  <div style="margin-bottom: 20px;">
-    <div class="flex items-center justify-between mb-2">
-      <h2 style="font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text3);">Grupos</h2>
-      <a href="/groups/new" class="text-xs text-gold">+ Nuevo</a>
+  <div style="margin-bottom: 16px;">
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+      <div class="section-header" style="margin-bottom: 0; border-bottom: none; padding-bottom: 0;">Grupos</div>
+      <a href="/groups/new" style="font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase;">+ Nuevo</a>
     </div>
 
     {#each dash.groups as group}
-      <a href="/groups/{group.id}" style="text-decoration: none; color: inherit;">
-        <div class="glass-card" style="display: flex; align-items: center; gap: 12px; cursor: pointer;">
-          <div style="font-size: 28px; width: 40px; text-align: center;">{group.emoji}</div>
+      <a href="/groups/{group.id}">
+        <div class="glass-card" style="display: flex; align-items: center; gap: 12px;">
+          <div style="font-size: 24px; width: 36px; text-align: center; flex-shrink: 0;">{group.emoji}</div>
           <div style="flex: 1; min-width: 0;">
-            <div style="font-weight: 600; font-size: 14px;" class="truncate">{group.name}</div>
-            <div class="text-xs text-muted">{group.member_count} personas · {group.expense_count} gastos</div>
+            <div style="font-weight: 600; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{group.name}</div>
+            <div style="font-size: 9px; color: var(--text3); letter-spacing: 0.05em; margin-top: 2px;">{group.member_count} personas · {group.expense_count} gastos</div>
           </div>
-          <div class="font-bold text-sm" class:text-green={group.balance > 0} class:text-red={group.balance < 0}>
+          <div style="font-weight: 700; font-size: 12px; font-family: 'Libre Baskerville', Georgia, serif;" class:text-green={group.balance > 0} class:text-red={group.balance < 0}>
             {group.balance > 0 ? '+' : ''}{fmt(group.balance)}
           </div>
         </div>
@@ -63,21 +62,26 @@
 
   <!-- Recent Activity -->
   <div>
-    <h2 style="font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text3); margin-bottom: 8px;">Actividad reciente</h2>
+    <div class="section-header">Actividad reciente</div>
 
     {#each dash.recentExpenses as exp}
-      <a href="/expense/{exp.id}" style="text-decoration: none; color: inherit;">
-        <div class="glass-card" style="display: flex; align-items: center; gap: 12px; padding: 12px 16px;">
-          <div style="font-size: 20px; width: 32px; text-align: center;">{categories[exp.category] || '📌'}</div>
+      <a href="/expense/{exp.id}">
+        <div class="glass-card" style="display: flex; align-items: center; gap: 12px; padding: 10px 14px;">
+          <div style="font-size: 18px; width: 28px; text-align: center; flex-shrink: 0;">{categories[exp.category] || '📌'}</div>
           <div style="flex: 1; min-width: 0;">
-            <div style="font-weight: 500; font-size: 13px;" class="truncate">{exp.description}</div>
-            <div class="text-xs text-muted">{exp.group_emoji} {exp.group_name} · {exp.paid_by_name}</div>
+            <div style="font-weight: 500; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{exp.description}</div>
+            <div style="font-size: 9px; color: var(--text3); letter-spacing: 0.05em; margin-top: 1px;">{exp.group_emoji} {exp.group_name} · pagó {exp.paid_by_name}</div>
           </div>
-          <div class="font-bold text-sm">{fmt(exp.amount)}</div>
+          <div style="font-weight: 600; font-size: 12px; font-family: 'Libre Baskerville', Georgia, serif;">{fmt(exp.amount)}</div>
         </div>
       </a>
     {/each}
   </div>
+
+  <!-- FAB -->
+  <a href="/expense/new">
+    <button class="btn-fab">+</button>
+  </a>
 {:else}
   <div style="text-align: center; padding: 60px 20px;">
     <div style="font-size: 48px; margin-bottom: 16px;">💰</div>
