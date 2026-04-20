@@ -4,7 +4,7 @@ import { createExpense, createRecurringInstances, createExpenseWithItems } from 
 
 export const POST: RequestHandler = async ({ request }) => {
   const body = await request.json();
-  const { groupId, description, amount, paidBy, splitType, category, date, note, splitUserIds, createdBy, recurring, items } = body;
+  const { groupId, description, amount, paidBy, splitType, category, date, note, splitUserIds, createdBy, recurring, items, currency } = body;
 
   if (!groupId || !description || !amount || !paidBy || !date || !splitUserIds?.length) {
     return json({ error: 'Missing required fields' }, { status: 400 });
@@ -15,13 +15,13 @@ export const POST: RequestHandler = async ({ request }) => {
     expense = createExpenseWithItems(
       groupId, description, parseFloat(amount), paidBy,
       splitType || 'equal', category || 'other', date,
-      splitUserIds, createdBy, note, items, recurring
+      splitUserIds, createdBy, note, items, recurring, currency
     );
   } else {
     expense = createExpense(
       groupId, description, parseFloat(amount), paidBy,
       splitType || 'equal', category || 'other', date,
-      splitUserIds, undefined, createdBy, note, recurring
+      splitUserIds, undefined, createdBy, note, recurring, undefined, currency
     );
   }
 

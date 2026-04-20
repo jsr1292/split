@@ -1,7 +1,8 @@
 import type { PageServerLoad } from './$types';
-import { getExpenseById, getExpenseSplits, getExpenseItems, getExpenseItemSplits } from '$lib/server/db/queries';
+import { getExpenseById, getExpenseSplits, getExpenseItems, getExpenseItemSplits, getSelfUser } from '$lib/server/db/queries';
 
-export const load: PageServerLoad = async ({ params }) => {
+export const load: PageServerLoad = async ({ params, locals }) => {
+  const self = getSelfUser(locals.user?.id) as any;
   const expense = getExpenseById(params.id) as any;
   if (!expense) return { expense: null };
   const splits = getExpenseSplits(params.id);
@@ -10,5 +11,5 @@ export const load: PageServerLoad = async ({ params }) => {
     ...item,
     splits: getExpenseItemSplits(item.id)
   }));
-  return { expense, splits, items: itemsWithSplits };
+  return { expense, splits, items: itemsWithSplits, self, userBaseCurrency: self?.base_currency || 'EUR' };
 };

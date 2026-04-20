@@ -6,5 +6,6 @@ export const load: PageServerLoad = async ({ locals }) => {
   const self = getSelfUser(locals.user.id) as any;
   if (!self) return { self: null, dashboard: null };
   const dashboard = getDashboard(self.id);
-  return { self, dashboard };
+  const userBaseCurrency = self?.base_currency || 'EUR';
+  return { self, dashboard, userBaseCurrency };
 };

@@ -14,6 +14,7 @@
   ];
 
   let groupId = $state(data.preselectedGroup || '');
+  let currency = $state('EUR');
   let description = $state('');
   let amount = $state('');
   let amountFocused = $state(false);
@@ -35,6 +36,7 @@
   });
 
   let paidBy = $state(data.self?.id || '');
+  let conversionPreview = $state<{ amount: number; rate: number } | null>(null);
   let category = $state('other');
   let date = $state(new Date().toISOString().split('T')[0]);
   let note = $state('');
@@ -44,7 +46,7 @@
 
   let currentMembers = $state(data.members);
   async function onGroupChange() {
-    if (!groupId) { currentMembers = []; return; }
+    if (!groupId) { currentMembers = []; currency = 'EUR'; return; }
     const res = await fetch(`/api/groups/${groupId}/members`);
     if (res.ok) {
       currentMembers = await res.json();
@@ -52,8 +54,41 @@
       if (!currentMembers.find((m: any) => m.id === paidBy) && data.self) {
         paidBy = data.self.id;
       }
+      // Fetch group details to get default currency
+      const groupRes = await fetch(`/api/groups/${groupId}`);
+      if (groupRes.ok) {
+        const groupData = await groupRes.json();
+        currency = groupData.currency || 'EUR';
+      }
     }
   }
+
+  // Fetch conversion preview when amount or currency changes
+  async function updateConversionPreview() {
+    if (!amount || computedAmount === null || currency === data.userBaseCurrency) {
+      conversionPreview = null;
+      return;
+    }
+    try {
+      const res = await fetch(`/api/rates?from=${currency}&to=${data.userBaseCurrency}`);
+      if (res.ok) {
+        const data = await res.json();
+        conversionPreview = {
+          amount: Math.round(computedAmount * data.rate * 100) / 100,
+          rate: data.rate
+        };
+      }
+    } catch {
+      conversionPreview = null;
+    }
+  }
+
+  // React to currency changes
+  $effect(() => {
+    currency;
+    amount;
+    updateConversionPreview();
+  });
 
   function toggleMember(id: string) {
     if (selectedMembers.includes(id)) {
@@ -117,7 +152,7 @@
     try {
       let payload: any = {
         groupId, description, amount: computedAmount || parseFloat(amount),
-        paidBy, category, date, note,
+        paidBy, category, date, note, currency,
         splitUserIds: selectedMembers, createdBy: data.self?.id,
         recurring: recurring === 'no' ? null : recurring
       };
@@ -213,25 +248,41 @@
 </div>
 
 <div class="form-group">
-  <label for="amount">Importe (€)</label>
-  <input
-    id="amount"
-    type="text"
-    inputmode="decimal"
-    placeholder="0.00"
-    bind:value={amount}
-    onfocus={() => amountFocused = true}
-    onblur={() => {
-      // Don't hide if operator was just tapped (it will refocus)
-      setTimeout(() => {
-        if (!keepBarOpen) amountFocused = false;
-      }, 200);
-    }}
-    style="font-family: 'Libre Baskerville', Georgia, serif; font-size: 20px; text-align: center; padding: 14px;"
-  />
+  <label for="amount">Importe</label>
+  <div style="display: flex; gap: 8px; align-items: stretch;">
+    <input
+      id="amount"
+      type="text"
+      inputmode="decimal"
+      placeholder="0.00"
+      bind:value={amount}
+      onfocus={() => amountFocused = true}
+      onblur={() => {
+        setTimeout(() => {
+          if (!keepBarOpen) amountFocused = false;
+        }, 200);
+      }}
+      style="flex: 1; font-family: 'Libre Baskerville', Georgia, serif; font-size: 20px; text-align: center; padding: 14px;"
+    />
+    <select
+      bind:value={currency}
+      style="width: 80px; font-size: 14px; text-align: center; padding: 8px 4px;"
+    >
+      {#each data.currencies as curr}
+        <option value={curr}>{curr}</option>
+      {/each}
+    </select>
+  </div>
   {#if amount && computedAmount !== null}
     <div style="text-align: center; margin-top: 6px; font-size: 12px; color: var(--gold); font-family: 'Libre Baskerville', Georgia, serif;">
-      = {new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(computedAmount)}
+      {#if currency === data.userBaseCurrency}
+        = {new Intl.NumberFormat('es-ES', { style: 'currency', currency: currency }).format(computedAmount)}
+      {:else if conversionPreview}
+        ≈ {new Intl.NumberFormat('es-ES', { style: 'currency', currency: data.userBaseCurrency }).format(conversionPreview.amount)}
+        <span style="font-size: 9px; color: var(--text3);"> ({currency} → {data.userBaseCurrency})</span>
+      {:else}
+        = {new Intl.NumberFormat('es-ES', { style: 'currency', currency: currency }).format(computedAmount)}
+      {/if}
     </div>
   {/if}
 </div>

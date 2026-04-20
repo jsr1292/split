@@ -6,8 +6,9 @@
     drinks: '🍺', shopping: '🛍️', utilities: '💡', health: '💊', other: '📌'
   };
 
-  function fmt(n: number) {
-    return new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(n);
+  function fmt(n: number, curr?: string) {
+    const currency = curr || exp?.currency || 'EUR';
+    return new Intl.NumberFormat('es-ES', { style: 'currency', currency }).format(n);
   }
 
   async function deleteExpense() {
@@ -37,6 +38,7 @@
   <div class="glass-card-static" style="text-align: center; padding: 20px; margin-bottom: 12px;">
     <div style="font-size: 36px; margin-bottom: 8px;">{categories[exp.category] || '📌'}</div>
     <div style="font-family: 'Libre Baskerville', Georgia, serif; font-size: 20px; font-weight: 700; color: var(--gold); margin-bottom: 4px;">{fmt(exp.amount)}</div>
+    <div style="font-size: 10px; color: var(--text3);">Moneda: {exp.currency || 'EUR'}</div>
     <div style="font-size: 13px; font-weight: 500; margin-bottom: 4px;">{exp.description}</div>
     <div style="font-size: 9px; color: var(--text3); letter-spacing: 0.1em; text-transform: uppercase;">
       {new Date(exp.date).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}
@@ -63,8 +65,13 @@
       <div class="glass-card-static" style="display: flex; align-items: center; gap: 10px; padding: 10px 14px;">
         <div class="avatar" style="background: {split.user_color}; width: 24px; height: 24px; font-size: 10px;">{split.user_name[0]}</div>
         <div style="font-size: 12px; font-weight: 500;">{split.user_name}</div>
-        <div style="margin-left: auto; font-family: 'Libre Baskerville', Georgia, serif; font-size: 13px; font-weight: 600;">
-          {fmt(split.share)}
+        <div style="margin-left: auto; text-align: right;">
+          <div style="font-family: 'Libre Baskerville', Georgia, serif; font-size: 13px; font-weight: 600;">
+            {fmt(split.share)}
+          </div>
+          {#if split.base_currency && split.base_currency !== exp.currency}
+            <div style="font-size: 9px; color: var(--text3);">≈ {fmt(split.base_amount, split.base_currency)}</div>
+          {/if}
         </div>
       </div>
     {/each}

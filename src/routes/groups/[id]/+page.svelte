@@ -6,14 +6,19 @@
     drinks: '🍺', shopping: '🛍️', utilities: '💡', health: '💊', other: '📌'
   };
 
-  function fmt(n: number) {
-    return new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(n);
+  function fmt(n: number, curr?: string) {
+    const currency = curr || data.group?.currency || 'EUR';
+    return new Intl.NumberFormat('es-ES', { style: 'currency', currency }).format(n);
+  }
+
+  function fmtUser(n: number) {
+    return new Intl.NumberFormat('es-ES', { style: 'currency', currency: data.userBaseCurrency || 'EUR' }).format(n);
   }
 
   function balanceLabel(n: number) {
-    if (n > 0) return `+${fmt(n)}`;
-    if (n < 0) return `−${fmt(Math.abs(n))}`;
-    return '€0.00';
+    if (n > 0) return `+${fmtUser(n)}`;
+    if (n < 0) return `−${fmtUser(Math.abs(n))}`;
+    return fmtUser(0);
   }
 
   // Settle up state
@@ -137,13 +142,17 @@
   <div class="glass-card-static" style="text-align: center; padding: 20px; margin-bottom: 12px;">
     <div style="font-size: 36px; margin-bottom: 6px;">{g.emoji}</div>
     <div style="font-family: 'Libre Baskerville', Georgia, serif; font-size: 20px; font-weight: 700; color: var(--gold); margin-bottom: 4px;">{g.name}</div>
-    <div style="font-size: 9px; color: var(--text3); letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 12px;">{data.members.length} personas · {data.expenses.length} gastos</div>
+    <div style="font-size: 9px; color: var(--text3); letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 4px;">{data.members.length} personas · {data.expenses.length} gastos</div>
+    <div style="font-size: 8px; color: var(--text3); letter-spacing: 0.1em; margin-bottom: 12px;">Moneda: {g.currency || 'EUR'}</div>
     <div class="gold-divider"></div>
     <div style="margin-top: 12px;">
       <div class="stat-label" style="margin-bottom: 4px;">Tu balance</div>
       <div class="stat-value" style="font-size: 26px;" class:text-green={data.myBalance > 0} class:text-red={data.myBalance < 0}>
         {balanceLabel(data.myBalance)}
       </div>
+      {#if (g.currency || 'EUR') !== data.userBaseCurrency}
+        <div style="font-size: 10px; color: var(--text3); margin-top: 2px;">(≈ {fmt(data.myBalance, g.currency || 'EUR')})</div>
+      {/if}
     </div>
   </div>
 
@@ -215,10 +224,11 @@
               <span class:text-red={b.from_user === data.self?.id}>{b.from_name}</span>
               <span style="color: var(--text3); font-size: 10px;"> le debe a </span>
               <span class:text-green={b.to_user === data.self?.id}>{b.to_name}</span>
+              <span style="font-size: 8px; color: var(--text3);"> ({b.currency || 'EUR'})</span>
             </div>
           </div>
           <div style="font-family: 'Libre Baskerville', Georgia, serif; font-weight: 700; font-size: 14px;" class:text-green={b.to_user === data.self?.id} class:text-red={b.from_user === data.self?.id}>
-            {fmt(b.amount)}
+            {fmt(b.amount, b.currency || 'EUR')}
           </div>
         </div>
       {/each}
@@ -333,7 +343,7 @@
               {#if exp.recurring_parent_id}<span style="color: var(--gold-dim);"> ·实例</span>{/if}
             </div>
           </div>
-          <div style="font-family: 'Libre Baskerville', Georgia, serif; font-weight: 600; font-size: 13px;">{fmt(exp.amount)}</div>
+          <div style="font-family: 'Libre Baskerville', Georgia, serif; font-weight: 600; font-size: 13px;">{fmt(exp.amount, exp.currency || 'EUR')}</div>
         </div>
       </a>
     {/each}

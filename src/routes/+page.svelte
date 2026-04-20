@@ -2,7 +2,7 @@
   let { data } = $props();
 
   function fmt(n: number) {
-    return new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(n);
+    return new Intl.NumberFormat('es-ES', { style: 'currency', currency: data.userBaseCurrency || 'EUR' }).format(n);
   }
 </script>
 
@@ -30,6 +30,7 @@
         <div style="font-family: 'Libre Baskerville', Georgia, serif; font-size: 16px; font-weight: 700; color: var(--red);">{fmt(d.totalOwe)}</div>
       </div>
     </div>
+    <div style="font-size: 8px; color: var(--text3); margin-top: 8px;">Moneda: {data.userBaseCurrency || 'EUR'}</div>
   </div>
 
   <!-- Groups -->

@@ -11,6 +11,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
   const balances = getGroupBalances(params.id);
   const settlements = getSettlements(params.id);
   const myBalance = self ? getUserBalanceInGroup(params.id, self.id) : 0;
+  const userBaseCurrency = self?.base_currency || 'EUR';
 
   const categories = getDb().prepare(`
     SELECT e.category, SUM(e.amount) as total, COUNT(*) as count
@@ -48,5 +49,5 @@ export const load: PageServerLoad = async ({ params, locals }) => {
     suggestedPayer = members.find((m: any) => m.id === self.id) || members[0];
   }
 
-  return { group, members, expenses, balances, settlements, myBalance, self, categories, suggestedPayer };
+  return { group, members, expenses, balances, settlements, myBalance, self, categories, suggestedPayer, userBaseCurrency };
 };

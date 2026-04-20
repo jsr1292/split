@@ -1,5 +1,6 @@
 import type { PageServerLoad } from './$types';
 import { getAllGroups, getGroupMembers, getSelfUser } from '$lib/server/db/queries';
+import { getSupportedCurrencies } from '$lib/server/currency';
 
 export const load: PageServerLoad = async ({ url }) => {
   const self = getSelfUser(locals.user?.id) as any;
@@ -11,5 +12,8 @@ export const load: PageServerLoad = async ({ url }) => {
     members = getGroupMembers(groupId);
   }
 
-  return { self, groups, preselectedGroup: groupId, members };
+  const currencies = getSupportedCurrencies();
+  const userBaseCurrency = self?.base_currency || 'EUR';
+
+  return { self, groups, preselectedGroup: groupId, members, currencies, userBaseCurrency };
 };

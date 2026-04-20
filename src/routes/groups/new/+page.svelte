@@ -5,6 +5,7 @@
 
   let name = $state('');
   let emoji = $state('🏠');
+  let defaultCurrency = $state('EUR');
   let selectedMembers = $state<string[]>([data.self?.id || '']);
   let newMemberName = $state('');
   let saving = $state(false);
@@ -46,7 +47,7 @@
       const res = await fetch('/api/groups', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: name.trim(), emoji, memberIds: selectedMembers })
+        body: JSON.stringify({ name: name.trim(), emoji, memberIds: selectedMembers, defaultCurrency })
       });
       if (res.ok) {
         const group = await res.json();
@@ -96,6 +97,17 @@
 <div class="form-group">
   <label for="name">Nombre del grupo</label>
   <input id="name" type="text" placeholder="Ej: Viaje a Lisboa" bind:value={name} />
+</div>
+
+<!-- Default Currency -->
+<div class="form-group">
+  <label for="currency">Moneda predeterminada</label>
+  <select id="currency" bind:value={defaultCurrency}>
+    {#each data.currencies as curr}
+      <option value={curr}>{curr}</option>
+    {/each}
+  </select>
+  <div style="font-size: 10px; color: var(--text3); margin-top: 4px;">Los gastos de este grupo se registrarán en esta moneda</div>
 </div>
 
 <!-- Members -->
