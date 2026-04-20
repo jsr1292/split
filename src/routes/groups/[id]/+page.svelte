@@ -163,13 +163,12 @@
       <!-- Horizontal Bar Chart -->
       <div style="display: flex; flex-direction: column; gap: 6px;">
         {#each data.categories as cat}
-          {@const pct = Math.round((cat.total / totalCatAmount) * 100)}
           <div style="display: flex; align-items: center; gap: 8px;">
             <div style="font-size: 14px; width: 20px; text-align: center; flex-shrink: 0;">{categories[cat.category] || '📌'}</div>
             <div style="flex: 1; height: 8px; background: rgba(255,255,255,0.05); border-radius: 4px; overflow: hidden;">
-              <div style="height: 100%; width: {pct}%; background: linear-gradient(90deg, var(--gold), rgba(201,168,76,0.6)); border-radius: 4px; transition: width 0.3s ease;"></div>
+              <div style="height: 100%; width: {Math.round((cat.total / totalCatAmount) * 100)}%; background: linear-gradient(90deg, var(--gold), rgba(201,168,76,0.6)); border-radius: 4px; transition: width 0.3s ease;"></div>
             </div>
-            <div style="font-family: 'Libre Baskerville', Georgia, serif; font-size: 10px; font-weight: 700; color: var(--gold); min-width: 32px; text-align: right;">{pct}%</div>
+            <div style="font-family: 'Libre Baskerville', Georgia, serif; font-size: 10px; font-weight: 700; color: var(--gold); min-width: 32px; text-align: right;">{Math.round((cat.total / totalCatAmount) * 100)}%</div>
           </div>
         {/each}
       </div>
@@ -327,7 +326,7 @@
   </div>
 
   <!-- Add Expense Button -->
-  <div style="text-align: center; margin-top: 16px;">
+  <div style="text-align: center; margin-top: 16px; margin-bottom: 40px;">
     <a href="/expense/new?group={g.id}">
       <button class="btn-gold" style="padding: 12px 32px;">+ Añadir gasto</button>
     </a>
