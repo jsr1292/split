@@ -74,6 +74,7 @@
     return original;
   }
   let totalToSettle = $derived(suggestedSettlements.reduce((sum, s, i) => sum + getEditedAmount(i, s.amount), 0));
+  let totalCatAmount = $derived(data.categories.reduce((s: number, c: any) => s + c.total, 0));
 
   async function confirmSettle() {
     settling = true;
@@ -135,14 +136,30 @@
 
   <!-- Category Breakdown -->
   {#if data.categories.length > 0}
-    <div style="display: flex; gap: 0; flex-wrap: wrap; margin-bottom: 16px;">
-      {#each data.categories as cat}
-        <div class="glass-card-static" style="flex: 1; min-width: 70px; text-align: center; padding: 8px 4px; margin: 3px;">
-          <div style="font-size: 16px; margin-bottom: 1px;">{categories[cat.category] || '📌'}</div>
-          <div style="font-family: 'Libre Baskerville', Georgia, serif; font-size: 10px; font-weight: 700; color: var(--gold);">{fmt(cat.total)}</div>
-          <div style="font-size: 7px; color: var(--text3);">{cat.count} gasto{cat.count !== 1 ? 's' : ''}</div>
-        </div>
-      {/each}
+    <div style="margin-bottom: 16px;">
+      <div class="section-header">Por categoría</div>
+      <div style="display: flex; gap: 0; flex-wrap: wrap; margin-bottom: 12px;">
+        {#each data.categories as cat}
+          <div class="glass-card-static" style="flex: 1; min-width: 70px; text-align: center; padding: 8px 4px; margin: 3px;">
+            <div style="font-size: 16px; margin-bottom: 1px;">{categories[cat.category] || '📌'}</div>
+            <div style="font-family: 'Libre Baskerville', Georgia, serif; font-size: 10px; font-weight: 700; color: var(--gold);">{fmt(cat.total)}</div>
+            <div style="font-size: 7px; color: var(--text3);">{cat.count} gasto{cat.count !== 1 ? 's' : ''}</div>
+          </div>
+        {/each}
+      </div>
+      <!-- Horizontal Bar Chart -->
+      <div style="display: flex; flex-direction: column; gap: 6px;">
+        {#each data.categories as cat}
+          {@const pct = Math.round((cat.total / totalCatAmount) * 100)}
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <div style="font-size: 14px; width: 20px; text-align: center; flex-shrink: 0;">{categories[cat.category] || '📌'}</div>
+            <div style="flex: 1; height: 8px; background: rgba(255,255,255,0.05); border-radius: 4px; overflow: hidden;">
+              <div style="height: 100%; width: {pct}%; background: linear-gradient(90deg, var(--gold), rgba(201,168,76,0.6)); border-radius: 4px; transition: width 0.3s ease;"></div>
+            </div>
+            <div style="font-family: 'Libre Baskerville', Georgia, serif; font-size: 10px; font-weight: 700; color: var(--gold); min-width: 32px; text-align: right;">{pct}%</div>
+          </div>
+        {/each}
+      </div>
     </div>
   {/if}
 
