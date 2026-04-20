@@ -296,7 +296,12 @@
   <div>
     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
       <div class="section-header" style="margin-bottom: 0; border-bottom: none; padding-bottom: 0;">Gastos</div>
-      <a href="/expense/new?group={g.id}" style="font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase;">+ Añadir</a>
+      <div style="display: flex; gap: 8px; align-items: center;">
+        <a href="/api/groups/{g.id}/export" style="color: var(--text3);" title="Exportar CSV">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+        <a href="/expense/new?group={g.id}" style="font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase;">+ Añadir</a>
+      </div>
     </div>
 
     {#each data.expenses as exp}
