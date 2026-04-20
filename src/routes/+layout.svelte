@@ -11,6 +11,11 @@
   let currentPath = $state('');
   $effect(() => { currentPath = $page.url.pathname; });
   let showFab = $derived(currentPath && !currentPath.includes('/expense/new') && !currentPath.includes('/edit') && !currentPath.includes('/groups/new'));
+  let fabHref = $derived(() => {
+    const match = currentPath.match(/^\/groups\/([\w-]+)$/);
+    if (match) return `/expense/new?group=${match[1]}`;
+    return '/expense/new';
+  });
 
   function isActive(path: string) {
     if (path === '/') return currentPath === '/';
@@ -64,5 +69,5 @@
   </nav>
 
   <!-- FAB -->
-  <a href="/expense/new" class="btn-fab" style="{showFab ? '' : 'display: none;'}" title="Añadir gasto">+</a>
+  <a href={fabHref()} class="btn-fab" style="{showFab ? '' : 'display: none;'}" title="Añadir gasto">+</a>
 </div>
