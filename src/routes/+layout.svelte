@@ -31,6 +31,19 @@
     return '/expense/new';
   });
   let isAuthPage = $derived(currentPath.startsWith('/auth'));
+  let showUserMenu = $state(false);
+
+  $effect(() => {
+    if (!showUserMenu) return;
+    function handler(e: MouseEvent) {
+      const target = e.target as HTMLElement;
+      if (!target.closest('.user-menu-trigger') && !target.closest('.user-menu-dropdown')) {
+        showUserMenu = false;
+      }
+    }
+    document.addEventListener('click', handler);
+    return () => document.removeEventListener('click', handler);
+  });
 
   function isActive(path: string) {
     if (path === '/') return currentPath === '/';
@@ -60,7 +73,19 @@
         </a>
         <button class="theme-toggle" onclick={cycleTheme}>{themeIcons[currentTheme]}</button>
         <span style="font-size: 10px; color: var(--text3); letter-spacing: 0.05em;">{data.user?.name || ''}</span>
-        <div class="avatar" style="background: var(--gold);">{data.user?.name?.[0] || '?'}</div>
+        <div class="avatar user-menu-trigger" style="background: var(--gold); cursor: pointer; position: relative;" onclick={() => showUserMenu = !showUserMenu} role="button" tabindex="0" onkeydown={(e) => e.key === 'Enter' && (showUserMenu = !showUserMenu)}>{data.user?.name?.[0] || '?'}</div>
+        {#if showUserMenu}
+          <div class="user-menu-dropdown glass-card" style="position: absolute; top: 56px; right: 16px; background: var(--bg2); border: 1px solid var(--glass-border); border-radius: 8px; padding: 6px; z-index: 300; min-width: 140px;">
+            <div style="font-size: 10px; color: var(--text3); padding: 4px 8px 6px;">{data.user?.email || ''}</div>
+            <div class="gold-divider" style="margin: 4px 0;"></div>
+            <form method="POST" action="/auth/logout" style="margin: 0;">
+              <button type="submit" style="background: none; border: none; color: var(--text2); font-size: 12px; cursor: pointer; width: 100%; text-align: left; padding: 6px 8px; display: flex; align-items: center; gap: 6px; border-radius: 4px;" onmouseover={(e) => (e.currentTarget as HTMLElement).style.background='var(--glass-border)'} onmouseout={(e) => (e.currentTarget as HTMLElement).style.background='none'}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                Cerrar sesión
+              </button>
+            </form>
+          </div>
+        {/if}
       </div>
     </header>
   </div>
