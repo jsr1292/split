@@ -1,6 +1,6 @@
 import type { Actions } from './$types';
 import { createAccount, createSession } from '$lib/server/auth';
-import { fail, redirect } from '@sveltejs/kit';
+import { json } from '@sveltejs/kit';
 
 export const actions: Actions = {
   default: async ({ request, cookies }) => {
@@ -10,10 +10,10 @@ export const actions: Actions = {
     const name = data.get('name') as string;
 
     if (!email || !password || !name) {
-      return fail(400, { error: 'Todos los campos son requeridos' });
+      return json({ error: 'Todos los campos son requeridos' }, { status: 400 });
     }
     if (password.length < 6) {
-      return fail(400, { error: 'La contraseña debe tener al menos 6 caracteres' });
+      return json({ error: 'La contraseña debe tener al menos 6 caracteres' }, { status: 400 });
     }
 
     try {
@@ -26,13 +26,12 @@ export const actions: Actions = {
         sameSite: 'lax',
         maxAge: 30 * 24 * 60 * 60
       });
-      throw redirect(303, '/');
+      return json({ success: true, location: '/' }, { status: 200 });
     } catch (e: any) {
-      if (e.status === 303) throw e;
       if (e.message?.includes('UNIQUE')) {
-        return fail(400, { error: 'Este email ya está registrado' });
+        return json({ error: 'Este email ya está registrado' }, { status: 400 });
       }
-      return fail(500, { error: 'Error al crear la cuenta' });
+      return json({ error: 'Error al crear la cuenta' }, { status: 500 });
     }
   }
 };

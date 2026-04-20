@@ -1,6 +1,6 @@
 import type { Actions } from './$types';
 import { authenticate, createSession } from '$lib/server/auth';
-import { fail, redirect } from '@sveltejs/kit';
+import { json, redirect } from '@sveltejs/kit';
 
 export const actions: Actions = {
   default: async ({ request, cookies }) => {
@@ -9,12 +9,12 @@ export const actions: Actions = {
     const password = data.get('password') as string;
 
     if (!email || !password) {
-      return fail(400, { error: 'Email y contraseña requeridos' });
+      return json({ error: 'Email y contraseña requeridos' }, { status: 400 });
     }
 
     const account = authenticate(email, password);
     if (!account) {
-      return fail(401, { error: 'Email o contraseña incorrectos' });
+      return json({ error: 'Email o contraseña incorrectos' }, { status: 401 });
     }
 
     const sessionId = createSession(account.id);
@@ -26,6 +26,6 @@ export const actions: Actions = {
       maxAge: 30 * 24 * 60 * 60
     });
 
-    redirect(303, '/');
+    return json({ success: true, location: '/' }, { status: 200 });
   }
 };
