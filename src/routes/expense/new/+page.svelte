@@ -17,6 +17,7 @@
   let description = $state('');
   let amount = $state('');
   let amountFocused = $state(false);
+  let keepBarOpen = false;
 
   let computedAmount = $derived.by(() => {
     if (!amount) return null;
@@ -93,6 +94,7 @@
   }
 
   function opTap(val: string) {
+    keepBarOpen = true;
     if (val === 'backspace') {
       amount = amount.slice(0, -1);
     } else if (val === 'clear') {
@@ -101,6 +103,8 @@
       amount += val;
     }
     document.getElementById('amount')?.focus();
+    // Keep bar open through the blur→focus cycle
+    setTimeout(() => { keepBarOpen = false; }, 300);
   }
 
   const operators = [
@@ -158,7 +162,12 @@
     placeholder="0.00"
     bind:value={amount}
     onfocus={() => amountFocused = true}
-    onblur={() => setTimeout(() => amountFocused = false, 200)}
+    onblur={() => {
+      // Don't hide if operator was just tapped (it will refocus)
+      setTimeout(() => {
+        if (!keepBarOpen) amountFocused = false;
+      }, 200);
+    }}
     style="font-family: 'Libre Baskerville', Georgia, serif; font-size: 20px; text-align: center; padding: 14px;"
   />
   {#if amount && computedAmount !== null}
@@ -231,6 +240,7 @@
     {#each operators as op}
       <button
         onclick={() => opTap(op.val)}
+        onmousedown={(e) => e.preventDefault()}
         style="flex: 1; padding: 14px 0; background: var(--bg2); border: none; color: var(--gold); font-family: 'JetBrains Mono', monospace; font-size: 18px; font-weight: 600; cursor: pointer; margin: 0 2px; border-radius: 6px;"
       >{op.label}</button>
     {/each}
