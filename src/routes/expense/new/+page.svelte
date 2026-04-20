@@ -16,12 +16,11 @@
   let groupId = $state(data.preselectedGroup || '');
   let description = $state('');
   let amount = $state('');
+  let amountFocused = $state(false);
 
-  // Parse math expressions like "23.50 + 18.30 + 9.00"
   let computedAmount = $derived.by(() => {
     if (!amount) return null;
     try {
-      // Only allow numbers, operators, spaces, dots, commas
       const sanitized = amount.replace(/,/g, '.');
       if (!/^[\d+\-*/.\s()]+$/.test(sanitized)) return null;
       const result = Function(`"use strict"; return (${sanitized})`)();
@@ -33,16 +32,15 @@
       return null;
     }
   });
+
   let paidBy = $state(data.self?.id || '');
   let category = $state('other');
-  let splitType = $state('equal');
   let date = $state(new Date().toISOString().split('T')[0]);
   let note = $state('');
   let selectedMembers = $state<string[]>(data.members.map((m: any) => m.id));
   let saving = $state(false);
   let error = $state('');
 
-  // Update members when group changes
   let currentMembers = $state(data.members);
   async function onGroupChange() {
     if (!groupId) { currentMembers = []; return; }
@@ -71,14 +69,13 @@
     }
     saving = true;
     error = '';
-
     try {
       const res = await fetch('/api/expenses', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           groupId, description, amount: computedAmount || parseFloat(amount),
-          paidBy, splitType, category, date, note,
+          paidBy, category, date, note,
           splitUserIds: selectedMembers, createdBy: data.self?.id
         })
       });
@@ -88,12 +85,34 @@
         const err = await res.json();
         error = err.error || 'Error al guardar';
       }
-    } catch (e) {
+    } catch {
       error = 'Error de conexión';
     } finally {
       saving = false;
     }
   }
+
+  function opTap(val: string) {
+    if (val === 'backspace') {
+      amount = amount.slice(0, -1);
+    } else if (val === 'clear') {
+      amount = '';
+    } else {
+      amount += val;
+    }
+    document.getElementById('amount')?.focus();
+  }
+
+  const operators = [
+    { label: '+', val: ' + ' },
+    { label: '−', val: ' - ' },
+    { label: '×', val: ' * ' },
+    { label: '÷', val: ' / ' },
+    { label: '(', val: '(' },
+    { label: ')', val: ')' },
+    { label: '⌫', val: 'backspace' },
+    { label: 'C', val: 'clear' },
+  ];
 </script>
 
 <svelte:head>
@@ -130,42 +149,24 @@
   <input id="desc" type="text" placeholder="Ej: Cena en el restaurante" bind:value={description} />
 </div>
 
+<div class="form-group">
   <label for="amount">Importe (€)</label>
-  <div style="position: relative;">
-    <input id="amount" type="text" inputmode="decimal" placeholder="0.00" bind:value={amount} style="font-family: 'Libre Baskerville', Georgia, serif; font-size: 20px; text-align: center; padding: 14px;" />
-    <!-- Math operator bar -->
-    <div style="display: flex; gap: 0; margin-top: 6px; border-radius: 6px; overflow: hidden; border: 1px solid var(--border);">
-      {#each [
-        { label: '+', val: ' + ' },
-        { label: '−', val: ' - ' },
-        { label: '×', val: ' * ' },
-        { label: '÷', val: ' / ' },
-        { label: '(', val: '(' },
-        { label: ')', val: ')' },
-        { label: '⌫', val: 'backspace' },
-        { label: 'C', val: 'clear' },
-      ] as op}
-        <button
-          onclick={() => {
-            if (op.val === 'backspace') {
-              amount = amount.slice(0, -1);
-            } else if (op.val === 'clear') {
-              amount = '';
-            } else {
-              amount += op.val;
-            }
-            document.getElementById('amount')?.focus();
-          }}
-          style="flex: 1; padding: 10px 0; background: var(--bg2); border: none; border-right: 1px solid var(--border); color: var(--gold); font-family: 'JetBrains Mono', monospace; font-size: 16px; font-weight: 600; cursor: pointer; transition: background 0.1s;"
-        >{op.label}</button>
-      {/each}
+  <input
+    id="amount"
+    type="text"
+    inputmode="decimal"
+    placeholder="0.00"
+    bind:value={amount}
+    onfocus={() => amountFocused = true}
+    onblur={() => setTimeout(() => amountFocused = false, 200)}
+    style="font-family: 'Libre Baskerville', Georgia, serif; font-size: 20px; text-align: center; padding: 14px;"
+  />
+  {#if amount && computedAmount !== null}
+    <div style="text-align: center; margin-top: 6px; font-size: 12px; color: var(--gold); font-family: 'Libre Baskerville', Georgia, serif;">
+      = {new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(computedAmount)}
     </div>
-    {#if amount && computedAmount !== null}
-      <div style="text-align: center; margin-top: 6px; font-size: 12px; color: var(--gold); font-family: 'Libre Baskerville', Georgia, serif;">
-        = {new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(computedAmount)}
-      </div>
-    {/if}
-  </div>
+  {/if}
+</div>
 
 <!-- Category Picker -->
 <div class="form-group">
@@ -218,8 +219,20 @@
   <input id="note" type="text" placeholder="Detalles extra..." bind:value={note} />
 </div>
 
-<div style="margin-top: 20px;">
+<div style="margin-top: 20px; margin-bottom: 80px;">
   <button class="btn-gold" style="width: 100%; padding: 12px;" onclick={submit} disabled={saving}>
     {saving ? 'Guardando...' : 'Añadir gasto'}
   </button>
 </div>
+
+<!-- Fixed operator bar — only shows when amount field is focused -->
+{#if amountFocused}
+  <div style="position: fixed; bottom: 0; left: 0; right: 0; z-index: 60; background: var(--bg); border-top: 1px solid var(--border); display: flex; padding: 6px 4px; padding-bottom: calc(6px + env(safe-area-inset-bottom));">
+    {#each operators as op}
+      <button
+        onclick={() => opTap(op.val)}
+        style="flex: 1; padding: 14px 0; background: var(--bg2); border: none; color: var(--gold); font-family: 'JetBrains Mono', monospace; font-size: 18px; font-weight: 600; cursor: pointer; margin: 0 2px; border-radius: 6px;"
+      >{op.label}</button>
+    {/each}
+  </div>
+{/if}

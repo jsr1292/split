@@ -54,6 +54,12 @@ a:hover { color: var(--gold2); }
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-thumb { background: #1e2a42; border-radius: 2px; }
 
+/* Hide bottom nav and FAB when keyboard is open */
+body.keyboard-open .bottom-nav,
+body.keyboard-open .btn-fab {
+  display: none !important;
+}
+
 /* ── STICKY TOP ── */
 .site-top {
   position: fixed;
