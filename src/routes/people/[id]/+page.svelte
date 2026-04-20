@@ -10,6 +10,38 @@
     if (n < 0) return `le debes ${fmt(Math.abs(n))}`;
     return 'todo liquidado';
   }
+
+  let settling = $state(false);
+
+  async function settleUp() {
+    if (!confirm('¿Liquidar todas las deudas con ' + data.person.name + '?')) return;
+    settling = true;
+    const today = new Date().toISOString().split('T')[0];
+    try {
+      // Settle in each shared group
+      for (const g of data.groupBalances) {
+        if (Math.abs(g.balance) > 0.01) {
+          const from = g.balance > 0 ? data.person.id : data.self.id;
+          const to = g.balance > 0 ? data.self.id : data.person.id;
+          await fetch('/api/settle', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ groupId: g.id, fromUser: from, toUser: to, amount: Math.abs(g.balance), date: today })
+          });
+        }
+      }
+      window.location.reload();
+    } catch {
+      alert('Error al liquidar');
+    } finally {
+      settling = false;
+    }
+  }
+
+  const categories: Record<string, string> = {
+    food: '🍕', transport: '🚗', accommodation: '🏠', activities: '🎯',
+    drinks: '🍺', shopping: '🛍️', utilities: '💡', health: '💊', other: '📌'
+  };
 </script>
 
 <svelte:head>
@@ -29,7 +61,32 @@
     {data.totalBalance > 0 ? '+' : ''}{fmt(data.totalBalance)}
   </div>
   <div style="font-size: 11px; color: var(--text3); margin-top: 4px;">{balanceLabel(data.totalBalance)}</div>
+  {#if Math.abs(data.totalBalance) > 0.01}
+    <div style="margin-top: 12px;">
+      <button class="btn-gold" style="font-size: 9px; padding: 8px 20px;" onclick={settleUp} disabled={settling}>
+        {settling ? 'Liquidando...' : 'Liquidar'}
+      </button>
+    </div>
+  {/if}
 </div>
+
+{#if data.sharedExpenses && data.sharedExpenses.length > 0}
+  <div class="section-header">Gastos compartidos</div>
+  {#each data.sharedExpenses as exp}
+    <a href="/expense/{exp.id}">
+      <div class="glass-card" style="display: flex; align-items: center; gap: 10px; padding: 10px 14px;">
+        <div style="font-size: 18px; width: 28px; text-align: center; flex-shrink: 0;">{categories[exp.category] || '📌'}</div>
+        <div style="flex: 1; min-width: 0;">
+          <div style="font-size: 12px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{exp.description}</div>
+          <div style="font-size: 9px; color: var(--text3);">
+            {exp.group_emoji} {exp.group_name} · {new Date(exp.date).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })} · pagó {exp.paid_by_name}
+          </div>
+        </div>
+        <div style="font-family: 'Libre Baskerville', Georgia, serif; font-weight: 600; font-size: 13px;">{fmt(exp.amount)}</div>
+      </div>
+    </a>
+  {/each}
+{/if}
 
 {#if data.groupBalances.length > 0}
   <div class="section-header">Grupos compartidos</div>
@@ -47,7 +104,7 @@
       </div>
     </a>
   {/each}
-{:else}
+{:else if !data.sharedExpenses || data.sharedExpenses.length === 0}
   <div style="text-align: center; padding: 40px 20px; color: var(--text3); font-size: 12px;">
     No compartes ningún grupo con {data.person.name}
   </div>

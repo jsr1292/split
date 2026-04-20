@@ -1,4 +1,4 @@
-import { getUserById, getAllGroups, getGroupBalances, getSelfUser, getGroupMembers } from '$lib/server/db/queries';
+import { getUserById, getAllGroups, getGroupBalances, getSelfUser, getGroupMembers, getSharedExpenses } from '$lib/server/db/queries';
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 
@@ -28,5 +28,8 @@ export const load: PageServerLoad = async ({ params }) => {
 
   const totalBalance = Math.round(groupBalances.reduce((sum: number, g: any) => sum + g.balance, 0) * 100) / 100;
 
-  return { person, self, groupBalances, totalBalance };
+  // Get shared expenses
+  const sharedExpenses = getSharedExpenses(self.id, params.id);
+
+  return { person, self, groupBalances, totalBalance, sharedExpenses };
 };

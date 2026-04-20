@@ -99,6 +99,19 @@ export function getExpenseSplits(expenseId: string) {
   `).all(expenseId);
 }
 
+export function getSharedExpenses(selfId: string, personId: string) {
+  return getDb().prepare(`
+    SELECT DISTINCT e.*, u.name as paid_by_name, u.avatar_color as paid_by_color, g.name as group_name, g.emoji as group_emoji
+    FROM expenses e
+    JOIN users u ON e.paid_by = u.id
+    JOIN groups g ON e.group_id = g.id
+    JOIN expense_splits es1 ON e.id = es1.expense_id AND es1.user_id = ?
+    JOIN expense_splits es2 ON e.id = es2.expense_id AND es2.user_id = ?
+    WHERE es1.user_id = ? AND es2.user_id = ?
+    ORDER BY e.date DESC
+  `).all(selfId, personId, selfId, personId);
+}
+
 export function createExpense(
   groupId: string, description: string, amount: number, paidBy: string,
   splitType: string, category: string, date: string, splitUserIds: string[],
