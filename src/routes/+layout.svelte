@@ -10,6 +10,7 @@
 
   let currentPath = $state('');
   $effect(() => { currentPath = $page.url.pathname; });
+  let showFab = $derived(currentPath && !currentPath.includes('/expense/new') && !currentPath.includes('/edit') && !currentPath.includes('/groups/new'));
 
   function isActive(path: string) {
     if (path === '/') return currentPath === '/';
@@ -61,4 +62,7 @@
       </a>
     {/each}
   </nav>
+
+  <!-- FAB -->
+  <a href="/expense/new" class="btn-fab" style="{showFab ? '' : 'display: none;'}" title="Añadir gasto">+</a>
 </div>
