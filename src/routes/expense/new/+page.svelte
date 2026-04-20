@@ -16,6 +16,23 @@
   let groupId = $state(data.preselectedGroup || '');
   let description = $state('');
   let amount = $state('');
+
+  // Parse math expressions like "23.50 + 18.30 + 9.00"
+  let computedAmount = $derived.by(() => {
+    if (!amount) return null;
+    try {
+      // Only allow numbers, operators, spaces, dots, commas
+      const sanitized = amount.replace(/,/g, '.');
+      if (!/^[\d+\-*/.\s()]+$/.test(sanitized)) return null;
+      const result = Function(`"use strict"; return (${sanitized})`)();
+      if (typeof result === 'number' && isFinite(result) && result > 0) {
+        return Math.round(result * 100) / 100;
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  });
   let paidBy = $state(data.self?.id || '');
   let category = $state('other');
   let splitType = $state('equal');
@@ -60,7 +77,7 @@
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          groupId, description, amount: parseFloat(amount),
+          groupId, description, amount: computedAmount || parseFloat(amount),
           paidBy, splitType, category, date, note,
           splitUserIds: selectedMembers, createdBy: data.self?.id
         })
@@ -115,7 +132,12 @@
 
 <div class="form-group">
   <label for="amount">Importe (€)</label>
-  <input id="amount" type="text" inputmode="decimal" placeholder="0.00" bind:value={amount} style="font-family: 'Libre Baskerville', Georgia, serif; font-size: 20px; text-align: center; padding: 14px;" />
+  <input id="amount" type="text" inputmode="text" placeholder="23.50 + 18.30 + 9.00" bind:value={amount} style="font-family: 'Libre Baskerville', Georgia, serif; font-size: 20px; text-align: center; padding: 14px;" />
+  {#if amount && computedAmount !== null}
+    <div style="text-align: center; margin-top: 4px; font-size: 12px; color: var(--gold); font-family: 'Libre Baskerville', Georgia, serif;">
+      = {new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(computedAmount)}
+    </div>
+  {/if}
 </div>
 
 <!-- Category Picker -->
