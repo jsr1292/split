@@ -1,5 +1,5 @@
 import type { PageServerLoad } from './$types';
-import { getGroupById, getGroupMembers, getExpensesByGroup, getGroupBalances, getSettlements, getUserBalanceInGroup, getSelfUser } from '$lib/server/db/queries';
+import { getGroupById, getGroupMembers, getExpensesByGroup, getGroupBalances, getSettlements, getUserBalanceInGroup, getSelfUser, getDb } from '$lib/server/db/queries';
 
 export const load: PageServerLoad = async ({ params }) => {
   const self = getSelfUser() as any;
@@ -12,5 +12,13 @@ export const load: PageServerLoad = async ({ params }) => {
   const settlements = getSettlements(params.id);
   const myBalance = self ? getUserBalanceInGroup(params.id, self.id) : 0;
 
-  return { group, members, expenses, balances, settlements, myBalance, self };
+  const categories = getDb().prepare(`
+    SELECT e.category, SUM(e.amount) as total, COUNT(*) as count
+    FROM expenses e
+    WHERE e.group_id = ?
+    GROUP BY e.category
+    ORDER BY total DESC
+  `).all(params.id);
+
+  return { group, members, expenses, balances, settlements, myBalance, self, categories };
 };

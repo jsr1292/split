@@ -38,7 +38,10 @@
         <span style="font-size: 18px;">💰</span>
         <span class="logo-text">Split</span>
       </div>
-      <div style="display: flex; align-items: center; gap: 10px;">
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <a href="/search" style="color: var(--text3);">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35" stroke-linecap="round"/></svg>
+        </a>
         <span style="font-size: 10px; color: var(--text3); letter-spacing: 0.05em;">{data.user?.name || ''}</span>
         <div class="avatar" style="background: var(--gold);">{data.user?.name?.[0] || '?'}</div>
       </div>

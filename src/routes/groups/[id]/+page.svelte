@@ -119,6 +119,19 @@
     </div>
   </div>
 
+  <!-- Category Breakdown -->
+  {#if data.categories.length > 0}
+    <div style="display: flex; gap: 0; flex-wrap: wrap; margin-bottom: 16px;">
+      {#each data.categories as cat}
+        <div class="glass-card-static" style="flex: 1; min-width: 70px; text-align: center; padding: 8px 4px; margin: 3px;">
+          <div style="font-size: 16px; margin-bottom: 1px;">{categories[cat.category] || '📌'}</div>
+          <div style="font-family: 'Libre Baskerville', Georgia, serif; font-size: 10px; font-weight: 700; color: var(--gold);">{fmt(cat.total)}</div>
+          <div style="font-size: 7px; color: var(--text3);">{cat.count} gasto{cat.count !== 1 ? 's' : ''}</div>
+        </div>
+      {/each}
+    </div>
+  {/if}
+
   <!-- Members -->
   <div style="margin-bottom: 16px;">
     <div class="section-header">Miembros</div>
