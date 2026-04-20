@@ -21,7 +21,7 @@
       const data = await res.json();
 
       if (res.ok && data.success) {
-        // Use static redirect page to break out of SvelteKit router
+        // Use static redirect page to break out of SvelteKit router and force server re-check
         window.location.href = '/redirect.html';
         return;
       }
