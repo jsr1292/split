@@ -110,9 +110,16 @@
 
     {#if data.expenses.length === 0}
       <div style="text-align: center; padding: 30px 20px; color: var(--text3); font-size: 12px;">
-        Sin gastos aún. <a href="/expense/new?group={g.id}">Añadir el primero →</a>
+        Sin gastos aún.
       </div>
     {/if}
+  </div>
+
+  <!-- Add Expense Button -->
+  <div style="text-align: center; margin-top: 16px;">
+    <a href="/expense/new?group={g.id}">
+      <button class="btn-gold" style="padding: 12px 32px;">+ Añadir gasto</button>
+    </a>
   </div>
 
   <!-- Settlements -->
