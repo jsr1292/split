@@ -21,11 +21,11 @@ export const actions: Actions = {
     cookies.set('session', sessionId, {
       path: '/',
       httpOnly: true,
-      secure: false, // self-hosted, might not have HTTPS
+      secure: false,
       sameSite: 'lax',
-      maxAge: 30 * 24 * 60 * 60 // 30 days
+      maxAge: 30 * 24 * 60 * 60
     });
 
-    throw redirect(303, '/');
+    redirect(303, '/');
   }
 };
