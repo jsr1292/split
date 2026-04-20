@@ -1,10 +1,12 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { deleteExpense, getExpenseById } from '$lib/server/db/queries';
+import { updateExpense, getExpenseById } from '$lib/server/db/queries';
 
-export const DELETE: RequestHandler = async ({ params }) => {
-  const expense = getExpenseById(params.id);
-  if (!expense) return json({ error: 'Not found' }, { status: 404 });
-  deleteExpense(params.id);
+export const PUT: RequestHandler = async ({ params, request }) => {
+  const { description, amount, paidBy, category, date, note, splitUserIds } = await request.json();
+  if (!description || !amount || !paidBy) {
+    return json({ error: 'Missing fields' }, { status: 400 });
+  }
+  updateExpense(params.id, { description, amount: parseFloat(amount), paidBy, category, date, note, splitUserIds });
   return json({ ok: true });
 };

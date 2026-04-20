@@ -26,10 +26,11 @@
 {#if data.expense}
   {@const exp = data.expense}
 
-  <div style="margin-bottom: 12px;">
+  <div style="margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
     <a href="/groups/{exp.group_id}" style="font-size: 10px; color: var(--text3); letter-spacing: 0.05em; display: inline-flex; align-items: center; gap: 4px;">
       ← Grupo
     </a>
+    <a href="/expense/{exp.id}/edit" style="font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gold);">✏️ Editar</a>
   </div>
 
   <!-- Expense Header -->

@@ -1,6 +1,8 @@
 import { getDb } from './index';
 import { v4 as uuid } from 'uuid';
 
+export { getDb };
+
 // ── USERS ──
 
 export function getAllUsers() {
@@ -134,6 +136,26 @@ export function deleteExpense(id: string) {
   db.prepare('DELETE FROM expenses WHERE id = ?').run(id);
 }
 
+export function updateExpense(
+  id: string, data: { description: string; amount: number; paidBy: string; category: string; date: string; note?: string; splitUserIds: string[] }
+) {
+  const db = getDb();
+  db.transaction(() => {
+    db.prepare(`
+      UPDATE expenses SET description = ?, amount = ?, paid_by = ?, category = ?, date = ?, note = ?
+      WHERE id = ?
+    `).run(data.description, data.amount, data.paidBy, data.category, data.date, data.note || null, id);
+    db.prepare('DELETE FROM expense_splits WHERE expense_id = ?').run(id);
+    const insertSplit = db.prepare('INSERT INTO expense_splits (id, expense_id, user_id, share) VALUES (?, ?, ?, ?)');
+    const splitCount = data.splitUserIds.length;
+    for (const uid of data.splitUserIds) {
+      const share = Math.round((data.amount / splitCount) * 100) / 100;
+      insertSplit.run(uuid(), id, uid, share);
+    }
+  })();
+  return getExpenseById(id);
+}
+
 // ── BALANCES ──
 
 export interface Balance {
@@ -223,6 +245,23 @@ export function getSettlements(groupId: string) {
     WHERE s.group_id = ?
     ORDER BY s.date DESC
   `).all(groupId);
+}
+
+export function deleteSettlement(id: string) {
+  getDb().prepare('DELETE FROM settlements WHERE id = ?').run(id);
+}
+
+export function updateGroup(id: string, name: string, emoji: string, memberIds: string[]) {
+  const db = getDb();
+  db.transaction(() => {
+    db.prepare('UPDATE groups SET name = ?, emoji = ? WHERE id = ?').run(name, emoji, id);
+    if (memberIds && memberIds.length > 0) {
+      // Clear and re-add members
+      db.prepare('DELETE FROM group_members WHERE group_id = ?').run(id);
+      const insertMember = db.prepare('INSERT OR IGNORE INTO group_members (group_id, user_id) VALUES (?, ?)');
+      for (const uid of memberIds) insertMember.run(id, uid);
+    }
+  })();
 }
 
 // ── DASHBOARD ──

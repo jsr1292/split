@@ -98,10 +98,11 @@
   {@const g = data.group}
 
   <!-- Back link -->
-  <div style="margin-bottom: 12px;">
+  <div style="margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
     <a href="/" style="font-size: 10px; color: var(--text3); letter-spacing: 0.05em; display: inline-flex; align-items: center; gap: 4px;">
       ← Grupos
     </a>
+    <a href="/groups/{g.id}/edit" style="font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gold);">✏️ Editar</a>
   </div>
 
   <!-- Group Header -->
@@ -244,6 +245,7 @@
             <div style="font-size: 9px; color: var(--text3);">{new Date(s.date).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}</div>
           </div>
           <div style="font-family: 'Libre Baskerville', Georgia, serif; font-weight: 600; font-size: 13px; color: var(--green);">{fmt(s.amount)}</div>
+          <button onclick={async () => { if (confirm('¿Deshacer esta liquidación?')) { await fetch(`/api/settlements/${s.id}`, { method: 'DELETE' }); window.location.reload(); } }} style="background: none; border: none; color: var(--text3); font-size: 14px; cursor: pointer; padding: 4px;" title="Deshacer">✕</button>
         </div>
       {/each}
     </div>
