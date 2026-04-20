@@ -143,7 +143,7 @@
           <div style="flex: 1; min-width: 0;">
             <div style="font-size: 12px; font-weight: 500;">
               <span class:text-red={b.from_user === data.self?.id}>{b.from_name}</span>
-              <span style="color: var(--text3); font-size: 10px;"> debe </span>
+              <span style="color: var(--text3); font-size: 10px;"> le debe a </span>
               <span class:text-green={b.to_user === data.self?.id}>{b.to_name}</span>
             </div>
           </div>

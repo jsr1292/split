@@ -205,6 +205,9 @@
 <!-- Split between -->
 <div class="form-group">
   <label>Dividir entre</label>
+  {#if currentMembers.length === 0}
+    <div style="font-size: 11px; color: var(--text3); padding: 8px 0;">Selecciona un grupo primero</div>
+  {:else}
   <div style="display: flex; flex-wrap: wrap; gap: 6px;">
     {#each currentMembers as m}
       <button
@@ -216,6 +219,7 @@
       </button>
     {/each}
   </div>
+  {/if}
 </div>
 
 <div class="form-group">
