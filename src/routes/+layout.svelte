@@ -125,7 +125,7 @@
 </script>
 
 {#if !isAuthPage}
-<div style="background: var(--bg); min-height: 100dvh; padding-bottom: 80px; position: relative;">
+<div style="background: var(--bg); min-height: 100dvh; padding-bottom: 0; display: flex; flex-direction: column;">
 
   <!-- Header -->
   <div class="site-top">
