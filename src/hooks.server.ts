@@ -49,8 +49,8 @@ export const handle: Handle = async ({ event, resolve }) => {
     const referer = event.request.headers.get('referer');
     const host = event.url.host;
     // Block only if origin/referer is set AND doesn't match our host
-    const badOrigin = origin && !origin.includes(host) && !origin.includes('localhost') && !origin.includes('127.0.0.1');
-    const badReferer = referer && !referer.includes(host) && !referer.includes('localhost') && !referer.includes('127.0.0.1');
+    const badOrigin = origin && !origin.includes(host);
+    const badReferer = referer && !referer.includes(host);
     if (origin && badOrigin && badReferer) {
       return new Response(JSON.stringify({ error: 'Forbidden' }), {
         status: 403,

@@ -121,9 +121,20 @@
     toastTimeout = setTimeout(() => { toast = null; }, 3000);
   }
 
-  // Expose showToast globally for use by pages
+  // Global confirm modal
+  let confirmState = $state<{ message: string; resolve: (v: boolean) => void } | null>(null);
+  function showConfirm(message: string): Promise<boolean> {
+    return new Promise((resolve) => {
+      confirmState = { message, resolve };
+    });
+  }
+  function confirmYes() { confirmState?.resolve(true); confirmState = null; }
+  function confirmNo() { confirmState?.resolve(false); confirmState = null; }
+
+  // Expose globally for pages
   if (browser) {
     (window as any).showOfflineToast = () => showToast(t('saved_locally'), 'info');
+    (window as any).showConfirm = showConfirm;
   }
 </script>
 
@@ -150,14 +161,14 @@
           <span class="logo-text">Splitrr</span>
         </div>
         <div style="display: flex; align-items: center; gap: 12px;">
-          <a href="/search" style="color: var(--text3);">
+          <a href="/search" style="color: var(--text3);" aria-label="Search">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35" stroke-linecap="round"/></svg>
           </a>
           {#if !isOnline}
             <span style="background: rgba(255,77,106,0.15); border: 1px solid rgba(255,77,106,0.3); border-radius: 4px; padding: 2px 6px; font-size: 8px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--red);">{t('offline')}</span>
           {/if}
-          <button class="theme-toggle" onclick={cycleTheme}>{themeIcons[currentTheme]}</button>
-          <button onclick={cycleLang} style="background: none; border: none; cursor: pointer; color: var(--gold); font-size: 11px; letter-spacing: 0.1em; padding: 2px 4px;" title={t('language')}>🌐 {getLangLabel()}</button>
+          <button class="theme-toggle" onclick={cycleTheme} aria-label="Toggle theme">{themeIcons[currentTheme]}</button>
+          <button onclick={cycleLang} style="background: none; border: none; cursor: pointer; color: var(--gold); font-size: 11px; letter-spacing: 0.1em; padding: 2px 4px;" title={t('language')} aria-label="Switch language">🌐 {getLangLabel()}</button>
           <span style="font-size: 12px; color: var(--text3); letter-spacing: 0.05em;">{data.user?.name || ''}</span>
           <div class="avatar user-menu-trigger" style="background: var(--gold); cursor: pointer; position: relative;" onclick={() => showUserMenu = !showUserMenu} role="button" tabindex="0" onkeydown={(e) => e.key === 'Enter' && (showUserMenu = !showUserMenu)}>{data.user?.name?.[0] || '?'}</div>
           {#if showUserMenu}
@@ -202,7 +213,7 @@
   </nav>
 
   <!-- FAB -->
-  <a href={fabHref()} class="btn-fab" style="{showFab ? '' : 'display: none;'}" title={currentLang === 'en' ? 'Add expense' : 'Añadir gasto'}>+</a>
+  <a href={fabHref()} class="btn-fab" style="{showFab ? '' : 'display: none;'}" title={currentLang === 'en' ? 'Add expense' : 'Añadir gasto'} aria-label="Add expense">+</a>
 
   <!-- Toast -->
   {#if toast}
@@ -210,4 +221,17 @@
       {toast.message}
     </div>
   {/if}
+{/if}
+
+<!-- Global Confirm Modal -->
+{#if confirmState}
+  <div style="position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 600; display: flex; align-items: center; justify-content: center; padding: 20px;" onclick={confirmNo}>
+    <div style="background: var(--bg2); border: 1px solid var(--glass-border); border-radius: 12px; padding: 20px; max-width: 320px; width: 100%;" onclick={(e) => e.stopPropagation()}>
+      <div style="font-size: 13px; margin-bottom: 16px; color: var(--text);">{confirmState.message}</div>
+      <div style="display: flex; gap: 8px; justify-content: flex-end;">
+        <button onclick={confirmNo} style="padding: 8px 16px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg); color: var(--text3); font-size: 12px; cursor: pointer;">Cancel</button>
+        <button onclick={confirmYes} style="padding: 8px 16px; border-radius: 6px; border: none; background: var(--gold); color: var(--btn-gold-text); font-size: 12px; font-weight: 600; cursor: pointer;">OK</button>
+      </div>
+    </div>
+  </div>
 {/if}

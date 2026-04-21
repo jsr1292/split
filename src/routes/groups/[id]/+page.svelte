@@ -33,6 +33,16 @@
     navigator.clipboard.writeText(link).then(() => {
       inviteLinkCopied = true;
       setTimeout(() => inviteLinkCopied = false, 2000);
+    }).catch(() => {
+      // Fallback: select a temporary input
+      const input = document.createElement('input');
+      input.value = link;
+      document.body.appendChild(input);
+      input.select();
+      document.execCommand('copy');
+      document.body.removeChild(input);
+      inviteLinkCopied = true;
+      setTimeout(() => inviteLinkCopied = false, 2000);
     });
   }
 
@@ -269,7 +279,7 @@
                 type="text"
                 inputmode="decimal"
                 value={editedAmounts[i] !== undefined ? editedAmounts[i] : s.amount.toFixed(2)}
-                oninput={(e) => { editedAmounts[i] = (e.target as HTMLInputElement).value; }}
+                oninput={(e) => { const v = (e.target as HTMLInputElement).value; if (/^[\d.,]*$/.test(v)) editedAmounts[i] = v; }}
                 style="width: 64px; background: var(--bg); border: 1px solid var(--glass-border); border-radius: 6px; color: var(--gold); font-family: 'Libre Baskerville', Georgia, serif; font-size: 13px; font-weight: 700; padding: 4px 6px; text-align: right;"
               />
             </div>
@@ -374,7 +384,7 @@
             <div style="font-size: 11px; color: var(--text3);">{new Date(s.date).toLocaleDateString(getSystemLocale(), { day: 'numeric', month: 'short' })}</div>
           </div>
           <div style="font-family: 'Libre Baskerville', Georgia, serif; font-weight: 600; font-size: 13px; color: var(--green);">{fmt(s.amount)}</div>
-          <button onclick={async () => { if (confirm(t('confirm_undo'))) { await fetch(`/api/settlements/${s.id}`, { method: 'DELETE' }); window.location.reload(); } }} style="background: none; border: none; color: var(--text3); font-size: 14px; cursor: pointer; padding: 4px;" title={t('undo_settlement')}>✕</button>
+          <button onclick={async () => { if (await (window as any).showConfirm(t('confirm_undo'))) { await fetch(`/api/settlements/${s.id}`, { method: 'DELETE' }); window.location.reload(); } }} style="background: none; border: none; color: var(--text3); font-size: 14px; cursor: pointer; padding: 4px;" title={t('undo_settlement')}>✕</button>
         </div>
       {/each}
     </div>

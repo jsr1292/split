@@ -76,7 +76,7 @@
 
 <div class="form-group">
   <label>{t('group_name')}</label>
-  <input type="text" bind:value={name} placeholder={t('group_name_placeholder')} />
+  <input type="text" bind:value={name} placeholder={t('group_name_placeholder')} maxlength="50" />
 </div>
 
 <div class="form-group">

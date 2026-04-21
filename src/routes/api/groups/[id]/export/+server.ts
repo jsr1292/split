@@ -12,8 +12,13 @@ export const GET: RequestHandler = async ({ params, locals }) => {
     return json({ error: 'Group not found' }, { status: 404 });
   }
 
-  const expenses = getExpensesByGroup(params.id);
+  // Verify membership
   const members = getGroupMembers(params.id);
+  if (!members.some((m: any) => m.account_id === locals.user!.id)) {
+    return json({ error: 'Forbidden' }, { status: 403 });
+  }
+
+  const expenses = getExpensesByGroup(params.id);
   const memberMap: Record<string, string> = {};
   for (const m of members) {
     memberMap[m.id] = m.name;

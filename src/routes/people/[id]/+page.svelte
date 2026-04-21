@@ -15,7 +15,7 @@
   let settling = $state(false);
 
   async function settleUp() {
-    if (!confirm(t('confirm_undo'))) return;
+    if (!(await (window as any).showConfirm(t('confirm_undo')))) return;
     settling = true;
     const today = new Date().toISOString().split('T')[0];
     try {

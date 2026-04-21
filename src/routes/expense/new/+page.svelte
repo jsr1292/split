@@ -241,7 +241,7 @@
 
 <div class="form-group">
   <label for="desc">{t('description')}</label>
-  <input id="desc" type="text" placeholder={t('description_placeholder')} bind:value={description} />
+  <input id="desc" type="text" placeholder={t('description_placeholder')} bind:value={description} maxlength="200" />
 </div>
 
 <div class="form-group">
@@ -395,7 +395,7 @@
 
 <div class="form-group">
   <label for="note">{t('note_optional')}</label>
-  <input id="note" type="text" placeholder={t('note_placeholder')} bind:value={note} />
+  <input id="note" type="text" placeholder={t('note_placeholder')} bind:value={note} maxlength="500" />
 </div>
 
 <div style="margin-top: 20px; margin-bottom: 80px;">

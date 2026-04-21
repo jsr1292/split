@@ -13,7 +13,7 @@
   }
 
   async function deleteExpense() {
-    if (!confirm(t('delete_this_expense'))) return;
+    if (!(await (window as any).showConfirm(t('delete_this_expense')))) return;
     const res = await fetch(`/api/expenses/${data.expense.id}`, { method: 'DELETE' });
     if (res.ok) {
       window.location.href = `/groups/${data.expense.group_id}`;
