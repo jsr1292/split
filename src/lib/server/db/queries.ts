@@ -437,11 +437,17 @@ export function getDashboard(selfUserId: string) {
     LIMIT 10
   `).all();
 
+  // Batch: compute all group balances in a single query (was N queries, now 1)
+  const balancesByGroup = getUserBalancesForGroups(
+    groups.map((g: any) => g.id),
+    selfUserId
+  );
+
   // Total balance across all groups
   let totalOwed = 0;
   let totalOwe = 0;
   const groupBalances = groups.map((g: any) => {
-    const bal = getUserBalanceInGroup(g.id, selfUserId);
+    const bal = balancesByGroup[g.id] ?? 0;
     if (bal > 0) totalOwed += bal;
     else totalOwe += Math.abs(bal);
     return { ...g, balance: bal };
@@ -454,6 +460,58 @@ export function getDashboard(selfUserId: string) {
     groups: groupBalances,
     recentExpenses
   };
+}
+
+// Batch version: compute a user's balance across multiple groups in a single query
+export function getUserBalancesForGroups(groupIds: string[], userId: string): Record<string, number> {
+  if (groupIds.length === 0) return {};
+  const placeholders = groupIds.map(() => '?').join(',');
+  const db = getDb();
+
+  // Get all expense splits for this user across all groups
+  const splits = db.prepare(`
+    SELECT es.group_id as group_id, es.base_amount, es.base_currency, e.paid_by
+    FROM expense_splits es
+    JOIN expenses e ON es.expense_id = e.id
+    WHERE es.user_id = ? AND e.group_id IN (${placeholders})
+  `).all(userId, ...groupIds) as any[];
+
+  // Get all settlements involving this user across all groups
+  const settlements = db.prepare(`
+    SELECT from_user, to_user, amount, group_id
+    FROM settlements
+    WHERE group_id IN (${placeholders}) AND (from_user = ? OR to_user = ?)
+  `).all(...groupIds, userId, userId) as any[];
+
+  // Initialize balance per group
+  const balances: Record<string, number> = {};
+  for (const gid of groupIds) balances[gid] = 0;
+
+  // Process splits: user paid by others → they owe the payer
+  for (const s of splits) {
+    const bal = Math.round(s.base_amount * 100) / 100;
+    if (s.paid_by === userId) {
+      // User paid → others owe user (don't add, split base_amount already reflects what user should receive)
+      // Actually: base_amount is what user owes payer. If payer is user, user is owed.
+      balances[s.group_id] += bal;
+    } else {
+      // User is debtor → subtract what they owe
+      balances[s.group_id] -= bal;
+    }
+  }
+
+  // Process settlements
+  for (const s of settlements) {
+    if (s.from_user === userId) {
+      // User paid settlement → group_id from settlement, they paid someone
+      balances[s.group_id] -= Math.round(s.amount * 100) / 100;
+    } else {
+      // User received settlement
+      balances[s.group_id] += Math.round(s.amount * 100) / 100;
+    }
+  }
+
+  return balances;
 }
 
 // ── SEED DATA ──

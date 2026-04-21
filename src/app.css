@@ -98,31 +98,36 @@
 
 @font-face {
   font-family: 'JetBrains Mono';
-  src: url('/fonts/JetBrainsMono-Regular.ttf') format('truetype');
+  src: url('/fonts.subset/JetBrainsMono-Regular-subset.woff2') format('woff2'),
+       url('/fonts/JetBrainsMono-Regular.ttf') format('truetype');
   font-weight: 400;
   font-display: swap;
 }
 @font-face {
   font-family: 'JetBrains Mono';
-  src: url('/fonts/JetBrainsMono-Medium.ttf') format('truetype');
+  src: url('/fonts.subset/JetBrainsMono-Medium-subset.woff2') format('woff2'),
+       url('/fonts/JetBrainsMono-Medium.ttf') format('truetype');
   font-weight: 500;
   font-display: swap;
 }
 @font-face {
   font-family: 'JetBrains Mono';
-  src: url('/fonts/JetBrainsMono-Bold.ttf') format('truetype');
+  src: url('/fonts.subset/JetBrainsMono-Bold-subset.woff2') format('woff2'),
+       url('/fonts/JetBrainsMono-Bold.ttf') format('truetype');
   font-weight: 700;
   font-display: swap;
 }
 @font-face {
   font-family: 'Libre Baskerville';
-  src: url('/fonts/LibreBaskerville-Regular.ttf') format('truetype');
+  src: url('/fonts.subset/LibreBaskerville-Regular-subset.woff2') format('woff2'),
+       url('/fonts/LibreBaskerville-Regular.ttf') format('truetype');
   font-weight: 400;
   font-display: swap;
 }
 @font-face {
   font-family: 'Libre Baskerville';
-  src: url('/fonts/LibreBaskerville-Bold.ttf') format('truetype');
+  src: url('/fonts.subset/LibreBaskerville-Bold-subset.woff2') format('woff2'),
+       url('/fonts/LibreBaskerville-Bold.ttf') format('truetype');
   font-weight: 700;
   font-display: swap;
 }

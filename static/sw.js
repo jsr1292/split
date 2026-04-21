@@ -1,9 +1,17 @@
-const CACHE = 'split-v1';
+const CACHE = 'split-v2';
 const PRECACHE = [
   '/',
   '/groups',
   '/people',
+  '/search',
+  '/auth/login',
+  '/auth/register',
   '/manifest.json',
+  '/fonts.subset/JetBrainsMono-Regular-subset.woff2',
+  '/fonts.subset/JetBrainsMono-Bold-subset.woff2',
+  '/fonts.subset/JetBrainsMono-Medium-subset.woff2',
+  '/fonts.subset/LibreBaskerville-Regular-subset.woff2',
+  '/fonts.subset/LibreBaskerville-Bold-subset.woff2',
 ];
 const OFFLINE_QUEUE_KEY = 'split_offline_queue';
 
@@ -66,15 +74,12 @@ async function syncQueue() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(item.data)
       });
-      // Remove this item from queue regardless of whether it was new or duplicate
       await removeFromQueue(item.id);
     } catch (e) {
-      // Network error — stop and keep remaining items in queue
       break;
     }
   }
 
-  // Notify clients that sync is done
   const clients = await self.clients.matchAll();
   for (const client of clients) {
     client.postMessage({ type: 'SYNC_COMPLETE', syncedCount: queue.length });
@@ -102,14 +107,11 @@ self.addEventListener('fetch', (e) => {
   if (e.request.method === 'POST' && url.pathname === '/api/expenses') {
     e.respondWith(
       fetch(e.request.clone()).catch(async () => {
-        // Offline: queue the request
         const data = await e.request.clone().json();
-        // Ensure idempotency key exists for deduplication on replay
         if (!data.idempotency_key) {
           data.idempotency_key = crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
         }
         await addToQueue(data);
-        // Return a fake success response
         return new Response(JSON.stringify({ queued: true, offline: true }), {
           status: 202,
           headers: { 'Content-Type': 'application/json' }
@@ -119,7 +121,22 @@ self.addEventListener('fetch', (e) => {
     return;
   }
 
-  // API calls: network first
+  // Fonts: cache first, never network (already precached)
+  if (url.pathname.startsWith('/fonts.')) {
+    e.respondWith(
+      caches.match(e.request).then(cached => {
+        if (cached) return cached;
+        return fetch(e.request).then(res => {
+          const clone = res.clone();
+          caches.open(CACHE).then(cache => cache.put(e.request, clone));
+          return res;
+        });
+      })
+    );
+    return;
+  }
+
+  // API calls: network first, fallback to cache
   if (url.pathname.startsWith('/api/')) {
     e.respondWith(
       fetch(e.request).catch(() => caches.match(e.request))
@@ -135,24 +152,25 @@ self.addEventListener('fetch', (e) => {
     return;
   }
 
-  // Static assets: cache first
+  // Static assets: cache first, stale-while-revalidate
   e.respondWith(
-    caches.match(e.request).then(cached => cached || fetch(e.request).then(res => {
-      if (res.ok) {
-        const clone = res.clone();
-        caches.open(CACHE).then(cache => cache.put(e.request, clone));
-      }
-      return res;
-    }))
+    caches.match(e.request).then(cached => {
+      const networkFetch = fetch(e.request).then(res => {
+        if (res.ok) {
+          const clone = res.clone();
+          caches.open(CACHE).then(cache => cache.put(e.request, clone));
+        }
+        return res;
+      }).catch(() => cached);
+      return cached || networkFetch;
+    })
   );
 });
 
-// Listen for online event to trigger sync
 self.addEventListener('online', () => {
   syncQueue();
 });
 
-// Listen for manual force-sync messages from clients
 self.addEventListener('message', (e) => {
   if (e.data?.type === 'FORCE_SYNC') {
     syncQueue();
