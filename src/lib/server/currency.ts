@@ -29,18 +29,23 @@ export async function fetchRate(date: string, fromCurrency: string, toCurrency: 
 
   if (cached) return cached.rate;
 
-  // Try to get from ECB API
+  // Try Frankfurter (free, no key required)
+  // Supports: EUR, AUD, BRL, CAD, CHF, CNY, CZK, DKK, GBP, HKD, HUF, IDR, ILS, INR, JPY, KRW, MXN, MYR, NOK, NZD, PHP, PLN, RON, SEK, SGD, THB, TRY, USD, ZAR
   try {
-    // ECB gives EUR-based rates
-    const dateStr = date; // YYYY-MM-DD
     const symbols = SUPPORTED_CURRENCIES.filter(c => c !== 'EUR').join(',');
-    const url = `https://api.exchangerate.host/${dateStr}?base=EUR&symbols=${symbols}`;
+    // Try historical first, fall back to latest
+    let url = `https://api.frankfurter.app/${date}?from=EUR&to=${symbols}`;
+    let res = await fetch(url);
+    let data = await res.json();
 
-    const res = await fetch(url);
-    if (!res.ok) throw new Error(`ECB API error: ${res.status}`);
+    // If date not supported (future), use latest
+    if (data.error || !data.rates) {
+      url = `https://api.frankfurter.app/latest?from=EUR&to=${symbols}`;
+      res = await fetch(url);
+      data = await res.json();
+    }
 
-    const data = await res.json();
-    if (!data.success && !data.rates) throw new Error('Invalid ECB response');
+    if (!data.rates) throw new Error('No rates from Frankfurter');
 
     const rates = data.rates as Record<string, number>;
 
@@ -50,42 +55,38 @@ export async function fetchRate(date: string, fromCurrency: string, toCurrency: 
     );
 
     for (const [currency, rate] of Object.entries(rates)) {
-      // EUR to currency
-      insert.run(dateStr, 'EUR', currency, rate, 'ecb');
-      // currency to EUR (inverse)
-      insert.run(dateStr, currency, 'EUR', 1 / rate, 'ecb');
+      insert.run(date, 'EUR', currency, rate, 'frankfurter');
+      insert.run(date, currency, 'EUR', 1 / rate, 'frankfurter');
     }
-    // EUR to EUR = 1
-    insert.run(dateStr, 'EUR', 'EUR', 1.0, 'ecb');
+    insert.run(date, 'EUR', 'EUR', 1.0, 'frankfurter');
 
-    // Now get the specific rate we need
+    // EUR to EUR = 1
+    const eurTo = rates[toCurrency];
+    const eurFrom = rates[fromCurrency];
+
     if (fromCurrency === 'EUR') {
-      return rates[toCurrency] || 1.0;
+      return eurTo || 1.0;
     } else if (toCurrency === 'EUR') {
-      return 1 / (rates[fromCurrency] || 1.0);
+      return eurFrom ? 1 / eurFrom : 1.0;
     } else {
-      // Cross through EUR
-      const fromToEur = 1 / (rates[fromCurrency] || 1.0);
-      const eurToTarget = rates[toCurrency] || 1.0;
-      return fromToEur * eurToTarget;
+      // Cross through EUR: from→EUR→to
+      if (!eurFrom || !eurTo) return 1.0;
+      return (1 / eurFrom) * eurTo;
     }
   } catch (err) {
-    console.error('Failed to fetch from ECB, trying fallback:', err);
+    console.error('Failed to fetch from Frankfurter:', err);
 
     // Fallback: try to find most recent prior rate
     const fallback = db.prepare(`
-      SELECT rate FROM exchange_rates
-      WHERE date < ? AND from_currency = ? AND to_currency = ?
+      SELECT rate, date FROM exchange_rates
+      WHERE date <= ? AND from_currency = ? AND to_currency = ?
       ORDER BY date DESC LIMIT 1
-    `).get(date, fromCurrency, toCurrency) as { rate: number } | undefined;
+    `).get(date, fromCurrency, toCurrency) as { rate: number; date: string } | undefined;
 
     if (fallback) {
-      console.log(`Using fallback rate from prior date for ${fromCurrency}/${toCurrency}`);
       return fallback.rate;
     }
 
-    // Last resort: return 1 (no conversion)
-    console.error(`No rate found for ${fromCurrency}/${toCurrency} on ${date}, defaulting to 1.0`);
     return 1.0;
   }
 }
@@ -142,7 +143,6 @@ export async function getTodayRate(fromCurrency: string, toCurrency: string): Pr
 
   const today = new Date().toISOString().split('T')[0];
 
-  // Check if we have today's rate cached
   const db = getDb();
   const cached = db.prepare(
     'SELECT rate FROM exchange_rates WHERE date = ? AND from_currency = ? AND to_currency = ?'
@@ -150,13 +150,12 @@ export async function getTodayRate(fromCurrency: string, toCurrency: string): Pr
 
   if (cached) return cached.rate;
 
-  // Try to fetch today's rate
   try {
     const symbols = SUPPORTED_CURRENCIES.filter(c => c !== 'EUR').join(',');
-    const url = `https://api.exchangerate.host/latest?base=EUR&symbols=${symbols}`;
+    const url = `https://api.frankfurter.app/latest?from=EUR&to=${symbols}`;
     const res = await fetch(url);
 
-    if (!res.ok) throw new Error(`ECB API error: ${res.status}`);
+    if (!res.ok) throw new Error(`Frankfurter error: ${res.status}`);
 
     const data = await res.json();
     const rates = data.rates as Record<string, number>;
@@ -166,19 +165,21 @@ export async function getTodayRate(fromCurrency: string, toCurrency: string): Pr
     );
 
     for (const [currency, rate] of Object.entries(rates)) {
-      insert.run(today, 'EUR', currency, rate, 'ecb');
-      insert.run(today, currency, 'EUR', 1 / rate, 'ecb');
+      insert.run(today, 'EUR', currency, rate, 'frankfurter');
+      insert.run(today, currency, 'EUR', 1 / rate, 'frankfurter');
     }
-    insert.run(today, 'EUR', 'EUR', 1.0, 'ecb');
+    insert.run(today, 'EUR', 'EUR', 1.0, 'frankfurter');
+
+    const eurTo = rates[toCurrency];
+    const eurFrom = rates[fromCurrency];
 
     if (fromCurrency === 'EUR') {
-      return rates[toCurrency] || 1.0;
+      return eurTo || 1.0;
     } else if (toCurrency === 'EUR') {
-      return 1 / (rates[fromCurrency] || 1.0);
+      return eurFrom ? 1 / eurFrom : 1.0;
     } else {
-      const fromToEur = 1 / (rates[fromCurrency] || 1.0);
-      const eurToTarget = rates[toCurrency] || 1.0;
-      return fromToEur * eurToTarget;
+      if (!eurFrom || !eurTo) return 1.0;
+      return (1 / eurFrom) * eurTo;
     }
   } catch (err) {
     console.error('Failed to fetch today rate:', err);
