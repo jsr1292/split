@@ -41,13 +41,13 @@
   --bg-nav: rgba(8,8,8,0.95);
   --border: #1c1c1c;
   --border-hover: #2e2e2e;
-  --gold: #72D2A2;
-  --gold2: #8FE0B8;
-  --gold-dim: rgba(114,210,162,0.25);
+  --gold: #34C759;
+  --gold2: #5CD97A;
+  --gold-dim: rgba(52,199,89,0.25);
   --text: #f0f0f0;
   --text2: #c8c8c8;
   --text3: #888888;
-  --green: #34C759;
+  --green: #72D2A2;
   --red: #FF5C70;
   --blue: #60A5FA;
   --purple: #c084fc;
@@ -56,8 +56,8 @@
   --glass-border: rgba(255,255,255,0.08);
   --glass-hover: rgba(18,18,18,0.90);
   --glass-blur: 18px;
-  --gold-divider: rgba(114,210,162,0.10);
-  --gold-divider-mid: rgba(114,210,162,0.04);
+  --gold-divider: rgba(52,199,89,0.10);
+  --gold-divider-mid: rgba(52,199,89,0.04);
   --btn-gold-text: #000000;
   --avatar-text: #000000;
   --theme-color: #000000;
