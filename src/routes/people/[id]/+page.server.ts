@@ -1,4 +1,4 @@
-import { getUserById, getAllGroups, getGroupBalances, getSelfUser, getGroupMembers, getSharedExpenses } from '$lib/server/db/queries';
+import { getUserById, getAllGroups, getGroupBalances, getSelfUser, getSharedExpenses, getDb } from '$lib/server/db/queries';
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 
@@ -10,9 +10,22 @@ export const load: PageServerLoad = async ({ params }) => {
 
   // Find groups shared with this person
   const sharedGroups = groups.filter((g: any) => {
-    const members = getGroupMembers(g.id);
-    return members.some((m: any) => m.id === params.id);
+    const memberIds = groupMemberIds[g.id] || [];
+    return memberIds.includes(params.id);
   });
+
+  // Batch-fetch all group members in one query (was N queries, now 1)
+  const groupIds = sharedGroups.map((g: any) => g.id);
+  const membersByGroup: Record<string, string[]> = {};
+  if (groupIds.length > 0) {
+    const allMembers = getDb().prepare(`
+      SELECT gm.group_id, gm.user_id FROM group_members gm WHERE gm.group_id IN (${groupIds.map(() => '?').join(',')})
+    `).all(...groupIds) as any[];
+    for (const m of allMembers) {
+      if (!membersByGroup[m.group_id]) membersByGroup[m.group_id] = [];
+      membersByGroup[m.group_id].push(m.user_id);
+    }
+  }
 
   // For each shared group, get balance
   const groupBalances = sharedGroups.map((g: any) => {

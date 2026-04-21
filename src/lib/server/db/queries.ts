@@ -106,11 +106,12 @@ export function getSharedExpenses(selfId: string, personId: string) {
     FROM expenses e
     JOIN users u ON e.paid_by = u.id
     JOIN groups g ON e.group_id = g.id
-    JOIN expense_splits es1 ON e.id = es1.expense_id AND es1.user_id = ?
-    JOIN expense_splits es2 ON e.id = es2.expense_id AND es2.user_id = ?
-    WHERE es1.user_id = ? AND es2.user_id = ?
+    JOIN expense_splits es ON e.id = es.expense_id
+    WHERE es.user_id IN (?, ?)
+    GROUP BY e.id
+    HAVING COUNT(DISTINCT es.user_id) = 2
     ORDER BY e.date DESC
-  `).all(selfId, personId, selfId, personId);
+  `).all(selfId, personId);
 }
 
 export function deleteExpense(id: string) {
@@ -131,6 +132,29 @@ export function getExpenseItemSplits(itemId: string) {
     JOIN users u ON eis.user_id = u.id
     WHERE eis.item_id = ?
   `).all(itemId);
+}
+
+// Batch version: fetches splits for all item IDs in one query
+// Returns a map of itemId → splits[]
+export function getExpenseItemSplitsForItems(itemIds: string[]): Record<string, any[]> {
+  if (itemIds.length === 0) return {};
+  const placeholders = itemIds.map(() => '?').join(',');
+  const splits = getDb().prepare(`
+    SELECT eis.*, u.name as user_name, u.avatar_color as user_color, eis.item_id
+    FROM expense_item_splits eis
+    JOIN users u ON eis.user_id = u.id
+    WHERE eis.item_id IN (${placeholders})
+  `).all(...itemIds) as any[];
+  const result: Record<string, any[]> = {};
+  for (const s of splits) {
+    if (!result[s.item_id]) result[s.item_id] = [];
+    result[s.item_id].push(s);
+  }
+  // Fill in empty arrays for items with no splits
+  for (const id of itemIds) {
+    if (!result[id]) result[id] = [];
+  }
+  return result;
 }
 
 export function createExpense(
@@ -345,8 +369,21 @@ export function getGroupBalances(groupId: string): Balance[] {
 
   // Flatten to Balance[]
   const balances: Balance[] = [];
-  const users = getAllUsers();
-  const userMap = Object.fromEntries(users.map((u: any) => [u.id, u.name]));
+  // Collect all user IDs that appear in balances, then fetch only those names
+  const userIds = [...new Set([
+    ...expenses.map((e: any) => e.paid_by),
+    ...expenses.map((e: any) => e.debtor),
+    ...settlements.map((s: any) => s.from_user),
+    ...settlements.map((s: any) => s.to_user),
+  ])];
+  const userMap: Record<string, string> = {};
+  if (userIds.length > 0) {
+    const placeholders = userIds.map(() => '?').join(',');
+    const users = db.prepare(`SELECT id, name FROM users WHERE id IN (${placeholders})`).all(...userIds);
+    for (const u of users) {
+      userMap[(u as any).id] = (u as any).name;
+    }
+  }
 
   for (const [key, amount] of Object.entries(net)) {
     if (amount > 0.01) {

@@ -13,13 +13,14 @@ export const load: PageServerLoad = async ({ params, locals }) => {
   const myBalance = self ? getUserBalanceInGroup(params.id, self.id) : 0;
   const userBaseCurrency = self?.base_currency || 'EUR';
 
-  const categories = getDb().prepare(`
-    SELECT e.category, SUM(e.amount) as total, COUNT(*) as count
-    FROM expenses e
-    WHERE e.group_id = ?
-    GROUP BY e.category
-    ORDER BY total DESC
-  `).all(params.id);
+  // Compute category totals from already-fetched expenses (no extra DB query)
+  const catMap: Record<string, any> = {};
+  for (const e of expenses) {
+    if (!catMap[e.category]) catMap[e.category] = { category: e.category, total: 0, count: 0 };
+    catMap[e.category].total += e.amount;
+    catMap[e.category].count++;
+  }
+  const categories = Object.values(catMap).sort((a: any, b: any) => b.total - a.total);
 
   // Who should pay next: person with most negative balance (owes the most)
   // Calculate net balance per member
