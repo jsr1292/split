@@ -12,12 +12,19 @@
   let query = $state('');
   let results: any[] = $state([]);
   let searched = $state(false);
+  let loading = $state(false);
+  let debounceTimer: ReturnType<typeof setTimeout>;
 
   async function onSearch() {
-    if (query.length < 2) { results = []; searched = false; return; }
-    const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
-    if (res.ok) results = await res.json();
-    searched = true;
+    clearTimeout(debounceTimer);
+    if (query.length < 2) { results = []; searched = false; loading = false; return; }
+    loading = true;
+    debounceTimer = setTimeout(async () => {
+      const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+      if (res.ok) results = await res.json();
+      searched = true;
+      loading = false;
+    }, 300);
   }
 </script>
 
@@ -33,7 +40,11 @@
   <input type="text" placeholder={t('search_placeholder')} bind:value={query} oninput={onSearch} autofocus style="font-size: 16px; padding: 12px 14px;" />
 </div>
 
-{#if searched && results.length === 0}
+{#if loading}
+  <div style="text-align: center; padding: 40px 20px; color: var(--text3); font-size: 12px;">
+    ...
+  </div>
+{:else if searched && results.length === 0}
   <div style="text-align: center; padding: 40px 20px; color: var(--text3); font-size: 12px;">
     {t('no_results')}
   </div>

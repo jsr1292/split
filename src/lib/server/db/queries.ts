@@ -191,12 +191,31 @@ export function createExpense(
     // Calculate shares with base_amount in each user's base currency
     const insertSplit = db.prepare('INSERT INTO expense_splits (id, expense_id, user_id, share, base_currency, base_amount) VALUES (?, ?, ?, ?, ?, ?)');
     const splitCount = splitUserIds.length;
+
+    // Validate exact shares sum
+    if (splitType === 'exact' && exactShares) {
+      const sum = Object.values(exactShares).reduce((a: number, b: number) => a + b, 0);
+      if (Math.abs(sum - amount) > 0.01) {
+        throw new Error('Exact shares must sum to total amount');
+      }
+    }
+
+    // Pre-compute equal shares with remainder distribution
+    const equalBase = Math.floor((amount * 100) / splitCount) / 100;
+    const equalRemainder = Math.round((amount - equalBase * splitCount) * 100) / 100;
+    let remainderDistributed = false;
+
     for (const uid of splitUserIds) {
       let share: number;
       if (splitType === 'exact' && exactShares && exactShares[uid] !== undefined) {
         share = exactShares[uid];
       } else {
-        share = Math.round((amount / splitCount) * 100) / 100;
+        share = equalBase;
+        // Distribute rounding remainder to the first user
+        if (!remainderDistributed && equalRemainder > 0) {
+          share = Math.round((equalBase + equalRemainder) * 100) / 100;
+          remainderDistributed = true;
+        }
       }
 
       // Get user's base currency
@@ -241,7 +260,7 @@ export function createRecurringInstances(parentExpense: any, recurring: string) 
     else break;
 
     const dateStr = nextDate.toISOString().split('T')[0];
-    const inst = createExpense(groupId, description, amount, paidBy, splitType, category, dateStr, splitUserIds, undefined, createdBy, note, null, parentId);
+    const inst = createExpense(groupId, description, amount, paidBy, splitType, category, dateStr, splitUserIds, undefined, createdBy, note, recurring, parentId);
     instances.push(inst.expense);
   }
 
@@ -258,11 +277,37 @@ export function createExpenseWithItems(
   const id = uuid();
   const expenseCurrency = currency || 'EUR';
 
+  // Idempotency check
+  if (idempotency_key) {
+    const existing = db.prepare('SELECT id FROM expenses WHERE id = (SELECT expense_id FROM idempotency_keys WHERE key = ?)').get(idempotency_key);
+    if (existing) return { expense: getExpenseById(existing.id), created: false };
+  }
+
   const insert = db.transaction(() => {
     db.prepare(`
       INSERT INTO expenses (id, group_id, description, amount, currency, paid_by, split_type, category, date, note, created_by, recurring)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(id, groupId, description, amount, expenseCurrency, paidBy, splitType, category, date, note || null, createdBy || null, recurring || null);
+
+    // Also insert top-level expense_splits for balance calculation
+    const insertSplit = db.prepare('INSERT INTO expense_splits (id, expense_id, user_id, share, base_currency, base_amount) VALUES (?, ?, ?, ?, ?, ?)');
+    const splitCount = splitUserIds.length;
+    const equalBase = Math.floor((amount * 100) / splitCount) / 100;
+    const equalRemainder = Math.round((amount - equalBase * splitCount) * 100) / 100;
+    let remainderDistributed = false;
+
+    for (const uid of splitUserIds) {
+      let share = equalBase;
+      if (!remainderDistributed && equalRemainder > 0) {
+        share = Math.round((equalBase + equalRemainder) * 100) / 100;
+        remainderDistributed = true;
+      }
+      const user = getUserById(uid) as any;
+      const userBaseCurrency = user?.base_currency || 'EUR';
+      const rate = getCachedRate(date, expenseCurrency, userBaseCurrency);
+      const baseAmount = Math.round(share * rate * 100) / 100;
+      insertSplit.run(uuid(), id, uid, share, userBaseCurrency, baseAmount);
+    }
 
     // Insert items
     const insertItem = db.prepare('INSERT INTO expense_items (id, expense_id, description, amount) VALUES (?, ?, ?, ?)');
@@ -273,8 +318,15 @@ export function createExpenseWithItems(
       insertItem.run(itemId, id, item.description, item.amount);
 
       const itemSplitCount = item.splitUserIds.length;
+      const itemBase = Math.floor((item.amount * 100) / itemSplitCount) / 100;
+      const itemRemainder = Math.round((item.amount - itemBase * itemSplitCount) * 100) / 100;
+      let itemRemainderDistributed = false;
       for (const uid of item.splitUserIds) {
-        const share = Math.round((item.amount / itemSplitCount) * 100) / 100;
+        let share = itemBase;
+        if (!itemRemainderDistributed && itemRemainder > 0) {
+          share = Math.round((itemBase + itemRemainder) * 100) / 100;
+          itemRemainderDistributed = true;
+        }
         insertItemSplit.run(uuid(), itemId, uid, share);
       }
     }
@@ -362,8 +414,9 @@ export function getGroupBalances(groupId: string): Balance[] {
   }
 
   for (const s of settlements) {
-    // Settlements are recorded in the receiver's base currency (assumed EUR for now)
-    const key = netKey(s.from_user, s.to_user, 'EUR');
+    // Settlements are recorded in the group's default currency
+    const settleCurrency = (getDb().prepare('SELECT currency FROM groups WHERE id = ?').get(groupId) as any)?.currency || 'EUR';
+    const key = netKey(s.from_user, s.to_user, settleCurrency);
     net[key] = (net[key] || 0) - s.amount;
   }
 

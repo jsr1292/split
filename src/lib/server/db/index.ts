@@ -81,6 +81,20 @@ function initSchema(db: Database.Database) {
       created_at TEXT DEFAULT (datetime('now'))
     );
 
+    CREATE TABLE IF NOT EXISTS expense_items (
+      id TEXT PRIMARY KEY,
+      expense_id TEXT NOT NULL REFERENCES expenses(id) ON DELETE CASCADE,
+      description TEXT NOT NULL,
+      amount REAL NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS expense_item_splits (
+      id TEXT PRIMARY KEY,
+      item_id TEXT NOT NULL REFERENCES expense_items(id) ON DELETE CASCADE,
+      user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      share REAL NOT NULL
+    );
+
     CREATE INDEX IF NOT EXISTS idx_expenses_group ON expenses(group_id);
     CREATE INDEX IF NOT EXISTS idx_expenses_date ON expenses(date DESC, created_at DESC);
     CREATE INDEX IF NOT EXISTS idx_expense_splits_expense ON expense_splits(expense_id);
