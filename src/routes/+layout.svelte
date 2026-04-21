@@ -86,6 +86,11 @@
     { path: '/groups', icon: 'users', label: currentLang === 'en' ? 'Groups' : 'Grupos' },
     { path: '/people', icon: 'user', label: currentLang === 'en' ? 'People' : 'Personas' },
   ]);
+  const navIcons: Record<string, string> = {
+    home: '🏠',
+    users: '👥',
+    user: '👤',
+  };
 
   function cycleLang() {
     const next = currentLang === 'es' ? 'en' : 'es';
@@ -183,13 +188,7 @@
     {#each navLabels as item}
       <a href={item.path}>
         <button class:active={isActive(item.path)} style={isActive(item.path) ? 'color: var(--gold); transform: scale(1.1);' : 'color: var(--text3); transform: scale(1);'}>
-          {#if item.icon === 'home'}
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 12l9-9 9 9M5 10v10a1 1 0 001 1h3a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1h3a1 1 0 001-1V10" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          {:else if item.icon === 'users'}
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zm14 10v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          {:else}
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8z" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          {/if}
+          <span style="font-size: 16px; line-height: 1;">{navIcons[item.icon]}</span>
           <span>{item.label}</span>
         </button>
       </a>
