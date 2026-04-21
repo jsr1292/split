@@ -28,6 +28,8 @@
     }
   }
   if (typeof window !== 'undefined') {
+    const pageContainer = document.querySelector('.page-container');
+    if (pageContainer) pageContainer.addEventListener('scroll', dismissNumpad, { passive: true });
     window.addEventListener('scroll', dismissNumpad, { passive: true });
     window.addEventListener('touchstart', (e) => {
       const target = e.target as HTMLElement;

@@ -30,7 +30,9 @@
     }
   }
   if (typeof window !== 'undefined') {
-    // Dismiss on scroll
+    // Dismiss on scroll — listen on the scrollable container
+    const pageContainer = document.querySelector('.page-container');
+    if (pageContainer) pageContainer.addEventListener('scroll', dismissNumpad, { passive: true });
     window.addEventListener('scroll', dismissNumpad, { passive: true });
     // Dismiss on tap outside numpad
     window.addEventListener('touchstart', (e) => {
