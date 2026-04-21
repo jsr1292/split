@@ -445,6 +445,71 @@ body.keyboard-open .page-container {
 }
 .btn-fab:hover { transform: scale(1.05); }
 
+/* Custom numpad */
+.custom-numpad {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 60;
+  background: var(--bg);
+  border-top: 1px solid var(--border);
+  padding: 4px;
+  padding-bottom: calc(4px + env(safe-area-inset-bottom));
+}
+.numpad-row {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 4px;
+}
+.numpad-key {
+  flex: 1;
+  padding: 14px 0;
+  background: var(--bg2);
+  border: none;
+  color: var(--text);
+  font-family: 'SF Mono', Menlo, Consolas, monospace;
+  font-size: 20px;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: 8px;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  min-height: 44px;
+}
+.numpad-key:active {
+  background: var(--border);
+}
+.numpad-key.op-key {
+  color: var(--gold);
+  font-size: 18px;
+  font-weight: 600;
+  background: rgba(114,210,162,0.08);
+}
+.numpad-key.op-key:active {
+  background: rgba(114,210,162,0.2);
+}
+.numpad-key.del-key {
+  color: var(--red);
+}
+.numpad-key.done-key {
+  background: var(--gold);
+  color: var(--btn-gold-text);
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.05em;
+}
+.numpad-key.done-key:active {
+  opacity: 0.8;
+}
+.operators-row {
+  margin-bottom: 6px;
+}
+.operators-row .numpad-key {
+  padding: 10px 0;
+  font-size: 16px;
+}
+
 /* ══════════════════════════════════════
    INPUT
    ══════════════════════════════════════ */

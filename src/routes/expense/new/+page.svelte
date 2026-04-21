@@ -197,6 +197,10 @@
     }
   }
 
+  function tapDigit(d: string) {
+    amount += d;
+  }
+
   function opTap(val: string) {
     keepBarOpen = true;
     if (val === 'backspace') {
@@ -270,10 +274,10 @@
     <input
       id="amount"
       type="text"
-      inputmode="decimal"
+      inputmode="none"
       placeholder="0.00"
       bind:value={amount}
-      onfocus={() => { amountFocused = true; updateBarBottom(); }}
+      onfocus={() => { amountFocused = true; }}
       onblur={() => {
         setTimeout(() => {
           if (!keepBarOpen) amountFocused = false;
@@ -426,15 +430,39 @@
   </button>
 </div>
 
-<!-- Fixed operator bar -->
+<!-- Custom numpad + operator bar -->
 {#if amountFocused}
-  <div style="position: fixed; bottom: {barBottom}px; left: 0; right: 0; z-index: 60; background: var(--bg); border-top: 1px solid var(--border); display: flex; padding: 6px 4px; padding-bottom: calc(6px + env(safe-area-inset-bottom));">
-    {#each operators as op}
-      <button
-        onclick={() => opTap(op.val)}
-        onmousedown={(e) => e.preventDefault()}
-        style="flex: 1; padding: 14px 0; background: var(--bg2); border: none; color: var(--gold); font-family: 'JetBrains Mono', monospace; font-size: 18px; font-weight: 600; cursor: pointer; margin: 0 2px; border-radius: 6px;"
-      >{op.label}</button>
-    {/each}
+  <div class="custom-numpad" onclick={() => { keepBarOpen = true; document.getElementById('amount')?.focus(); setTimeout(() => keepBarOpen = false, 100); }}>
+    <!-- Operators row -->
+    <div class="numpad-row operators-row">
+      <button class="numpad-key op-key" onclick={() => opTap(' + ')}>+</button>
+      <button class="numpad-key op-key" onclick={() => opTap(' - ')}>−</button>
+      <button class="numpad-key op-key" onclick={() => opTap(' * ')}>×</button>
+      <button class="numpad-key op-key" onclick={() => opTap(' / ')}>÷</button>
+      <button class="numpad-key op-key" onclick={() => opTap('(')}>(</button>
+      <button class="numpad-key op-key" onclick={() => opTap(')')}>)</button>
+      <button class="numpad-key op-key del-key" onclick={() => opTap('backspace')}>⌫</button>
+    </div>
+    <!-- Digits -->
+    <div class="numpad-row">
+      <button class="numpad-key" onclick={() => tapDigit('1')}>1</button>
+      <button class="numpad-key" onclick={() => tapDigit('2')}>2</button>
+      <button class="numpad-key" onclick={() => tapDigit('3')}>3</button>
+    </div>
+    <div class="numpad-row">
+      <button class="numpad-key" onclick={() => tapDigit('4')}>4</button>
+      <button class="numpad-key" onclick={() => tapDigit('5')}>5</button>
+      <button class="numpad-key" onclick={() => tapDigit('6')}>6</button>
+    </div>
+    <div class="numpad-row">
+      <button class="numpad-key" onclick={() => tapDigit('7')}>7</button>
+      <button class="numpad-key" onclick={() => tapDigit('8')}>8</button>
+      <button class="numpad-key" onclick={() => tapDigit('9')}>9</button>
+    </div>
+    <div class="numpad-row">
+      <button class="numpad-key" onclick={() => tapDigit('.')}>.</button>
+      <button class="numpad-key" onclick={() => tapDigit('0')}>0</button>
+      <button class="numpad-key done-key" onclick={() => { amountFocused = false; document.getElementById('amount')?.blur(); }}>OK</button>
+    </div>
   </div>
 {/if}
