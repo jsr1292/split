@@ -124,49 +124,58 @@
   }
 </script>
 
-{#if !isAuthPage}
-<div style="background: var(--bg); min-height: 100dvh; padding-bottom: 0; display: flex; flex-direction: column;">
-
-  <!-- Header -->
-  <div class="site-top">
-    <header class="site-header">
-      <div style="display: flex; align-items: center; gap: 10px;">
-        <span style="font-size: 18px;">💰</span>
-        <span class="logo-text">Split</span>
-      </div>
-      <div style="display: flex; align-items: center; gap: 12px;">
-        <a href="/search" style="color: var(--text3);">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35" stroke-linecap="round"/></svg>
-        </a>
-        {#if !isOnline}
-          {#key langKey}<span style="background: rgba(255,77,106,0.15); border: 1px solid rgba(255,77,106,0.3); border-radius: 4px; padding: 2px 6px; font-size: 8px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--red);">{t('offline')}</span>{/key}
-        {/if}
-        <button class="theme-toggle" onclick={cycleTheme}>{themeIcons[currentTheme]}</button>
-        <button onclick={cycleLang} style="background: none; border: none; cursor: pointer; color: var(--gold); font-size: 11px; letter-spacing: 0.1em; padding: 2px 4px;" title={t('language')}>🌐 {getLangLabel()}</button>
-        <span style="font-size: 12px; color: var(--text3); letter-spacing: 0.05em;">{data.user?.name || ''}</span>
-        <div class="avatar user-menu-trigger" style="background: var(--gold); cursor: pointer; position: relative;" onclick={() => showUserMenu = !showUserMenu} role="button" tabindex="0" onkeydown={(e) => e.key === 'Enter' && (showUserMenu = !showUserMenu)}>{data.user?.name?.[0] || '?'}</div>
-        {#if showUserMenu}
-          <div class="user-menu-dropdown glass-card" style="position: absolute; top: 56px; right: 16px; background: var(--bg2); border: 1px solid var(--glass-border); border-radius: 8px; padding: 6px; z-index: 300; min-width: 140px;">
-            <div style="font-size: 12px; color: var(--text3); padding: 4px 8px 6px;">{data.user?.email || ''}</div>
-            <div class="gold-divider" style="margin: 4px 0;"></div>
-            <form method="POST" action="/auth/logout" style="margin: 0;">
-              <button type="submit" style="background: none; border: none; color: var(--text2); font-size: 12px; cursor: pointer; width: 100%; text-align: left; padding: 6px 8px; display: flex; align-items: center; gap: 6px; border-radius: 4px;" onmouseover={(e) => (e.currentTarget as HTMLElement).style.background='var(--glass-border)'} onmouseout={(e) => (e.currentTarget as HTMLElement).style.background='none'}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                {#key langKey}{t('logout')}{/key}
-              </button>
-            </form>
-          </div>
-        {/if}
-      </div>
-    </header>
-  </div>
-
-  <!-- Content -->
-  <div class="page-container">
+<!-- Auth pages: no nav, no header, no fixed UI -->
+{#if isAuthPage}
+  <div style="background: var(--bg); min-height: 100dvh;">
     {@render children()}
   </div>
 
-  <!-- Bottom Nav -->
+{:else}
+  <!-- Main app: flex column, header + content -->
+  <div style="background: var(--bg); min-height: 100dvh; padding-bottom: 0; display: flex; flex-direction: column;">
+
+    <!-- Header -->
+    <div class="site-top">
+      <header class="site-header">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="font-size: 18px;">💰</span>
+          <span class="logo-text">Split</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <a href="/search" style="color: var(--text3);">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35" stroke-linecap="round"/></svg>
+          </a>
+          {#if !isOnline}
+            {#key langKey}<span style="background: rgba(255,77,106,0.15); border: 1px solid rgba(255,77,106,0.3); border-radius: 4px; padding: 2px 6px; font-size: 8px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--red);">{t('offline')}</span>{/key}
+          {/if}
+          <button class="theme-toggle" onclick={cycleTheme}>{themeIcons[currentTheme]}</button>
+          <button onclick={cycleLang} style="background: none; border: none; cursor: pointer; color: var(--gold); font-size: 11px; letter-spacing: 0.1em; padding: 2px 4px;" title={t('language')}>🌐 {getLangLabel()}</button>
+          <span style="font-size: 12px; color: var(--text3); letter-spacing: 0.05em;">{data.user?.name || ''}</span>
+          <div class="avatar user-menu-trigger" style="background: var(--gold); cursor: pointer; position: relative;" onclick={() => showUserMenu = !showUserMenu} role="button" tabindex="0" onkeydown={(e) => e.key === 'Enter' && (showUserMenu = !showUserMenu)}>{data.user?.name?.[0] || '?'}</div>
+          {#if showUserMenu}
+            <div class="user-menu-dropdown glass-card" style="position: absolute; top: 56px; right: 16px; background: var(--bg2); border: 1px solid var(--glass-border); border-radius: 8px; padding: 6px; z-index: 300; min-width: 140px;">
+              <div style="font-size: 12px; color: var(--text3); padding: 4px 8px 6px;">{data.user?.email || ''}</div>
+              <div class="gold-divider" style="margin: 4px 0;"></div>
+              <form method="POST" action="/auth/logout" style="margin: 0;">
+                <button type="submit" style="background: none; border: none; color: var(--text2); font-size: 12px; cursor: pointer; width: 100%; text-align: left; padding: 6px 8px; display: flex; align-items: center; gap: 6px; border-radius: 4px;" onmouseover={(e) => (e.currentTarget as HTMLElement).style.background='var(--glass-border)'} onmouseout={(e) => (e.currentTarget as HTMLElement).style.background='none'}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  {#key langKey}{t('logout')}{/key}
+                </button>
+              </form>
+            </div>
+          {/if}
+        </div>
+      </header>
+    </div>
+
+    <!-- Content -->
+    <div class="page-container">
+      {@render children()}
+    </div>
+
+  </div>
+
+  <!-- Bottom Nav — OUTSIDE the flex wrapper so position:fixed is truly viewport-relative -->
   <nav class="bottom-nav">
     {#key langKey}
     {#each navPaths as item}
@@ -193,13 +202,8 @@
 
   <!-- Toast -->
   {#if toast}
-    <div style="position: fixed; top: {`calc(56px + max(env(safe-area-inset-top), 12px) + 8px)`}; left: 50%; transform: translateX(-50%); z-index: 500; background: {toast.type === 'success' ? 'rgba(0,229,160,0.15)' : 'rgba(201,168,76,0.15)'}; border: 1px solid {toast.type === 'success' ? 'rgba(0,229,160,0.3)' : 'rgba(201,168,76,0.3)'}; border-radius: 8px; padding: 8px 16px; font-size: 11px; color: {toast.type === 'success' ? 'var(--green)' : 'var(--gold)'}; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); transition: opacity 0.2s;" role="status">
+    <div style="position: fixed; top: {`calc(56px + max(env(safe-area-inset-top), 12px) + 8px)`}; left: 50%; transform: translateX(-50%); z-index: 500; background: {toast.type === 'success' ? 'rgba(0,229,160,0.15)' : 'rgba(201,168,76,0.15)'}; border: 1px solid {toast.type === 'success' ? 'rgba(0,229,160,0.3)' : 'rgba(201,168,76,0.3)'}; border-radius: 8px; padding: 8px 16px; font-size: 11px; color: {toast.type === 'success' ? 'var(--green)' : 'var(--gold)'}; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); transition: opacity: 0.2s;" role="status">
       {toast.message}
     </div>
   {/if}
-</div>
-{:else}
-  <div style="background: var(--bg); min-height: 100dvh;">
-    {@render children()}
-  </div>
 {/if}
