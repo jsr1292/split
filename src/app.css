@@ -185,7 +185,7 @@ body.keyboard-open .btn-fab {
 .site-header {
   border-bottom: 1px solid var(--glass-border);
   padding: 0 16px;
-  padding-top: max(env(safe-area-inset-top), 12px);
+  padding-top: max(env(safe-area-inset-top), var(--pwa-top, 12px));
   padding-bottom: 12px;
   display: flex;
   align-items: center;

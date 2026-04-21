@@ -6,10 +6,28 @@
   let { children, data } = $props();
 
   let currentTheme = $state('dark');
+  let pwaTopOffset = $state(0);
 
   if (browser) {
     currentTheme = localStorage.getItem('split-theme') || 'dark';
   }
+
+  // Fix PWA safe-area inset: visualViewport.offsetTop corrects the levitation issue
+  // that occurs in iOS standalone PWA where env(safe-area-inset-top) reports 0 on first load
+  $effect(() => {
+    if (!browser || !visualViewport) return;
+    function update() {
+      pwaTopOffset = visualViewport!.offsetTop;
+      document.documentElement.style.setProperty('--pwa-top', Math.max(12, pwaTopOffset) + 'px');
+    }
+    visualViewport.addEventListener('resize', update);
+    visualViewport.addEventListener('scroll', update);
+    update();
+    return () => {
+      visualViewport!.removeEventListener('resize', update);
+      visualViewport!.removeEventListener('scroll', update);
+    };
+  });
 
   function cycleTheme() {
     const themes = ['dark', 'oled', 'light'];
