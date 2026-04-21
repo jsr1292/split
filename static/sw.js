@@ -136,10 +136,18 @@ self.addEventListener('fetch', (e) => {
     return;
   }
 
-  // API calls: network first, fallback to cache
+  // API calls: network first, fallback to cache then a proper error response
   if (url.pathname.startsWith('/api/')) {
     e.respondWith(
-      fetch(e.request).catch(() => caches.match(e.request))
+      fetch(e.request).catch(async () => {
+        const cached = await caches.match(e.request);
+        if (cached) return cached;
+        // Never return undefined — always a valid Response
+        return new Response(JSON.stringify({ error: 'offline' }), {
+          status: 503,
+          headers: { 'Content-Type': 'application/json' }
+        });
+      })
     );
     return;
   }
