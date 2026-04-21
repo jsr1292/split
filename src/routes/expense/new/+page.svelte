@@ -1,5 +1,6 @@
 <script lang="ts">
   import { t, getSystemLocale } from '$lib/i18n/index.js';
+  import { onMount } from 'svelte';
   let { data } = $props();
 
   const categoryList = [
@@ -29,19 +30,18 @@
       document.getElementById('amount')?.blur();
     }
   }
-  if (typeof window !== 'undefined') {
-    // Dismiss on scroll — listen on the scrollable container
+
+  onMount(() => {
     const pageContainer = document.querySelector('.page-container');
     if (pageContainer) pageContainer.addEventListener('scroll', dismissNumpad, { passive: true });
     window.addEventListener('scroll', dismissNumpad, { passive: true });
-    // Dismiss on tap outside numpad
     window.addEventListener('touchstart', (e) => {
       const target = e.target as HTMLElement;
       if (amountFocused && !keepBarOpen && !target.closest('.custom-numpad') && target.id !== 'amount') {
         dismissNumpad();
       }
     }, { passive: true });
-  }
+  });
 
   let computedAmount = $derived.by(() => {
     if (!amount) return null;

@@ -1,5 +1,6 @@
 <script lang="ts">
   import { t, getSystemLocale } from '$lib/i18n/index.js';
+  import { onMount } from 'svelte';
   let { data } = $props();
   const e = data.expense;
 
@@ -27,7 +28,8 @@
       document.getElementById('amount')?.blur();
     }
   }
-  if (typeof window !== 'undefined') {
+
+  onMount(() => {
     const pageContainer = document.querySelector('.page-container');
     if (pageContainer) pageContainer.addEventListener('scroll', dismissNumpad, { passive: true });
     window.addEventListener('scroll', dismissNumpad, { passive: true });
@@ -37,7 +39,7 @@
         dismissNumpad();
       }
     }, { passive: true });
-  }
+  });
   let paidBy = $state(e.paid_by);
   let category = $state(e.category);
   let date = $state(e.date);
