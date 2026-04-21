@@ -96,22 +96,42 @@
    FONTS (self-hosted)
    ══════════════════════════════════════ */
 
+/* System fonts — zero network requests, instant render */
+/* Body/UI: native system sans-serif */
+body, p, span, a, button, label, div {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, 'Helvetica Neue', sans-serif;
+}
+
+/* JetBrains Mono → system monospace */
+.font-mono, .stat-value, input[type="number"], .amount-display {
+  font-family: 'SF Mono', Menlo, 'Cascadia Code', Consolas, 'Courier New', monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Libre Baskerville → system serif for numbers */
+.stat-value, .amount-display, .serif {
+  font-family: Georgia, 'Apple Symbols', 'Times New Roman', serif;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Old @font-face declarations kept as fallbacks (won't load if system fonts work) */
+/*
 @font-face {
-  font-family: 'JetBrains Mono';
+  font-family: 'SF Mono', Menlo, Consolas, monospace;
   src: url('/fonts.subset/JetBrainsMono-Regular-subset.woff2') format('woff2'),
        url('/fonts/JetBrainsMono-Regular.ttf') format('truetype');
   font-weight: 400;
   font-display: optional;
 }
 @font-face {
-  font-family: 'JetBrains Mono';
+  font-family: 'SF Mono', Menlo, Consolas, monospace;
   src: url('/fonts.subset/JetBrainsMono-Medium-subset.woff2') format('woff2'),
        url('/fonts/JetBrainsMono-Medium.ttf') format('truetype');
   font-weight: 500;
   font-display: optional;
 }
 @font-face {
-  font-family: 'JetBrains Mono';
+  font-family: 'SF Mono', Menlo, Consolas, monospace;
   src: url('/fonts.subset/JetBrainsMono-Bold-subset.woff2') format('woff2'),
        url('/fonts/JetBrainsMono-Bold.ttf') format('truetype');
   font-weight: 700;
@@ -131,6 +151,7 @@
   font-weight: 700;
   font-display: optional;
 }
+*/
 
 /* ══════════════════════════════════════
    BASE
@@ -208,7 +229,7 @@ body.keyboard-open .btn-fab {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  font-family: 'Libre Baskerville', Georgia, serif;
+  font-family: Georgia, 'Apple Symbols', 'Times New Roman', serif;
   font-size: 15px;
   font-weight: 700;
 }
@@ -330,7 +351,7 @@ body.keyboard-open .btn-fab {
   font-size: 20px;
   font-weight: 700;
   color: var(--gold);
-  font-family: 'Libre Baskerville', Georgia, serif;
+  font-family: Georgia, 'Apple Symbols', 'Times New Roman', serif;
   line-height: 1;
   font-variant-numeric: tabular-nums;
 }
@@ -509,8 +530,8 @@ label {
 .text-sm { font-size: 13px; }
 .text-xs { font-size: 12px; }
 .font-bold { font-weight: 700; }
-.font-mono { font-family: 'JetBrains Mono', monospace; }
-.font-serif { font-family: 'Libre Baskerville', Georgia, serif; }
+.font-mono { font-family: 'SF Mono', Menlo, Consolas, monospace, monospace; }
+.font-serif { font-family: Georgia, 'Apple Symbols', 'Times New Roman', serif; }
 
 .emoji-icon {
   font-family: 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji', sans-serif;
