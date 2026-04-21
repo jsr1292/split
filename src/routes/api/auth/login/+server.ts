@@ -15,10 +15,11 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
   }
 
   const sessionId = createSession(account.id);
+  const isProd = process.env.NODE_ENV === 'production';
   cookies.set('session', sessionId, {
     path: '/',
     httpOnly: true,
-    secure: false,
+    secure: isProd,
     sameSite: 'lax',
     maxAge: 30 * 24 * 60 * 60
   });
