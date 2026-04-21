@@ -2,7 +2,7 @@ import type { PageServerLoad } from './$types';
 import { getAllGroups, getGroupMembers, getSelfUser } from '$lib/server/db/queries';
 import { getSupportedCurrencies } from '$lib/server/currency';
 
-export const load: PageServerLoad = async ({ url }) => {
+export const load: PageServerLoad = async ({ url, locals }) => {
   const self = getSelfUser(locals.user?.id) as any;
   const groupId = url.searchParams.get('group');
   const groups = getAllGroups();

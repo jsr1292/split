@@ -1,16 +1,17 @@
 <script lang="ts">
+  import { t, getLocale } from '$lib/i18n/index.js';
   let { data } = $props();
 
   const categoryList = [
-    { id: 'food', emoji: '🍕', label: 'Comida' },
-    { id: 'transport', emoji: '🚗', label: 'Transporte' },
-    { id: 'accommodation', emoji: '🏠', label: 'Alojamiento' },
-    { id: 'activities', emoji: '🎯', label: 'Actividades' },
-    { id: 'drinks', emoji: '🍺', label: 'Copas' },
-    { id: 'shopping', emoji: '🛍️', label: 'Compras' },
-    { id: 'utilities', emoji: '💡', label: 'Servicios' },
-    { id: 'health', emoji: '💊', label: 'Salud' },
-    { id: 'other', emoji: '📌', label: 'Otro' },
+    { id: 'food', emoji: '🍕', labelKey: 'category_food' },
+    { id: 'transport', emoji: '🚗', labelKey: 'category_transport' },
+    { id: 'accommodation', emoji: '🏠', labelKey: 'category_accommodation' },
+    { id: 'activities', emoji: '🎯', labelKey: 'category_activities' },
+    { id: 'drinks', emoji: '🍺', labelKey: 'category_drinks' },
+    { id: 'shopping', emoji: '🛍️', labelKey: 'category_shopping' },
+    { id: 'utilities', emoji: '💡', labelKey: 'category_utilities' },
+    { id: 'health', emoji: '💊', labelKey: 'category_health' },
+    { id: 'other', emoji: '📌', labelKey: 'category_other' },
   ];
 
   let groupId = $state(data.preselectedGroup || '');
@@ -54,7 +55,6 @@
       if (!currentMembers.find((m: any) => m.id === paidBy) && data.self) {
         paidBy = data.self.id;
       }
-      // Fetch group details to get default currency
       const groupRes = await fetch(`/api/groups/${groupId}`);
       if (groupRes.ok) {
         const groupData = await groupRes.json();
@@ -63,7 +63,6 @@
     }
   }
 
-  // Fetch conversion preview when amount or currency changes
   async function updateConversionPreview() {
     if (!amount || computedAmount === null || currency === data.userBaseCurrency) {
       conversionPreview = null;
@@ -72,10 +71,10 @@
     try {
       const res = await fetch(`/api/rates?from=${currency}&to=${data.userBaseCurrency}`);
       if (res.ok) {
-        const data = await res.json();
+        const d = await res.json();
         conversionPreview = {
-          amount: Math.round(computedAmount * data.rate * 100) / 100,
-          rate: data.rate
+          amount: Math.round(computedAmount * d.rate * 100) / 100,
+          rate: d.rate
         };
       }
     } catch {
@@ -83,7 +82,6 @@
     }
   }
 
-  // React to currency changes
   $effect(() => {
     currency;
     amount;
@@ -98,16 +96,14 @@
     }
   }
 
-  // Recurring state
   let recurring = $state('no');
   const recurringOptions = [
-    { value: 'no', label: 'No repetir' },
-    { value: 'weekly', label: 'Semanal' },
-    { value: 'monthly', label: 'Mensual' },
-    { value: 'yearly', label: 'Anual' },
+    { value: 'no', labelKey: 'no_repeat' },
+    { value: 'weekly', labelKey: 'weekly' },
+    { value: 'monthly', labelKey: 'monthly' },
+    { value: 'yearly', labelKey: 'yearly' },
   ];
 
-  // Items state
   let splitMode = $state<'total' | 'items'>('total');
   let items = $state<{ description: string; amount: string; splitUserIds: string[] }[]>([]);
 
@@ -140,12 +136,12 @@
 
   async function submit() {
     if (!description || !amount || !groupId || !paidBy || selectedMembers.length === 0) {
-      error = 'Completa todos los campos';
+      error = t('fill_all_fields');
       return;
     }
     if (splitMode === 'items' && items.length > 0) {
       const validItems = items.filter(i => i.description && i.amount && i.splitUserIds.length > 0);
-      if (validItems.length === 0) { error = 'Añade al menos un artículo válido'; return; }
+      if (validItems.length === 0) { error = t('add_valid_item'); return; }
     }
     saving = true;
     error = '';
@@ -171,17 +167,16 @@
       if (res.ok) {
         window.location.href = `/groups/${groupId}`;
       } else if (res.status === 202) {
-        // Queued offline
         if (typeof window !== 'undefined' && (window as any).showOfflineToast) {
           (window as any).showOfflineToast();
         }
         setTimeout(() => { window.location.href = `/groups/${groupId}`; }, 1500);
       } else {
         const err = await res.json();
-        error = err.error || 'Error al guardar';
+        error = err.error || t('error_saving');
       }
     } catch {
-      error = 'Error de conexión';
+      error = t('connection_error');
     } finally {
       saving = false;
     }
@@ -197,7 +192,6 @@
       amount += val;
     }
     document.getElementById('amount')?.focus();
-    // Keep bar open through the blur→focus cycle
     setTimeout(() => { keepBarOpen = false; }, 300);
   }
 
@@ -214,17 +208,17 @@
 </script>
 
 <svelte:head>
-  <title>Split — Nuevo gasto</title>
+  <title>Split — {t('new_expense')}</title>
 </svelte:head>
 
 <!-- Back link -->
 <div style="margin-bottom: 12px;">
-  <a href="javascript:history.back()" style="font-size: 10px; color: var(--text3); letter-spacing: 0.05em; display: inline-flex; align-items: center; gap: 4px;">
-    ← Volver
+  <a href="javascript:history.back()" style="font-size: 12px; color: var(--text3); letter-spacing: 0.05em; display: inline-flex; align-items: center; gap: 4px;">
+    ← {t('back')}
   </a>
 </div>
 
-<div class="section-header" style="margin-bottom: 16px;">Nuevo gasto</div>
+<div class="section-header" style="margin-bottom: 16px;">{t('new_expense')}</div>
 
 {#if error}
   <div style="background: rgba(255,77,106,0.1); border: 1px solid rgba(255,77,106,0.2); border-radius: 6px; padding: 10px 14px; margin-bottom: 12px; font-size: 12px; color: var(--red);">
@@ -233,9 +227,9 @@
 {/if}
 
 <div class="form-group">
-  <label for="group">Grupo</label>
+  <label for="group">{t('groups')}</label>
   <select id="group" bind:value={groupId} onchange={onGroupChange}>
-    <option value="">Selecciona un grupo</option>
+    <option value="">{t('select_group')}</option>
     {#each data.groups as g}
       <option value={g.id}>{g.emoji} {g.name}</option>
     {/each}
@@ -243,12 +237,12 @@
 </div>
 
 <div class="form-group">
-  <label for="desc">Descripción</label>
-  <input id="desc" type="text" placeholder="Ej: Cena en el restaurante" bind:value={description} />
+  <label for="desc">{t('description')}</label>
+  <input id="desc" type="text" placeholder={t('description_placeholder')} bind:value={description} />
 </div>
 
 <div class="form-group">
-  <label for="amount">Importe</label>
+  <label for="amount">{t('amount')}</label>
   <div style="display: flex; gap: 8px; align-items: stretch;">
     <input
       id="amount"
@@ -276,12 +270,12 @@
   {#if amount && computedAmount !== null}
     <div style="text-align: center; margin-top: 6px; font-size: 12px; color: var(--gold); font-family: 'Libre Baskerville', Georgia, serif;">
       {#if currency === data.userBaseCurrency}
-        = {new Intl.NumberFormat('es-ES', { style: 'currency', currency: currency }).format(computedAmount)}
+        = {new Intl.NumberFormat(getLocale(), { style: 'currency', currency: currency }).format(computedAmount)}
       {:else if conversionPreview}
-        ≈ {new Intl.NumberFormat('es-ES', { style: 'currency', currency: data.userBaseCurrency }).format(conversionPreview.amount)}
-        <span style="font-size: 9px; color: var(--text3);"> ({currency} → {data.userBaseCurrency})</span>
+        ≈ {new Intl.NumberFormat(getLocale(), { style: 'currency', currency: data.userBaseCurrency }).format(conversionPreview.amount)}
+        <span style="font-size: 11px; color: var(--text3);"> ({currency} → {data.userBaseCurrency})</span>
       {:else}
-        = {new Intl.NumberFormat('es-ES', { style: 'currency', currency: currency }).format(computedAmount)}
+        = {new Intl.NumberFormat(getLocale(), { style: 'currency', currency: currency }).format(computedAmount)}
       {/if}
     </div>
   {/if}
@@ -289,34 +283,34 @@
 
 <!-- Category Picker -->
 <div class="form-group">
-  <label>Categoría</label>
+  <label>{t('category')}</label>
   <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;">
     {#each categoryList as cat}
       <button
         onclick={() => category = cat.id}
-        style="display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 4px; border-radius: 6px; border: 1px solid {category === cat.id ? 'var(--gold)' : 'var(--border)'}; background: {category === cat.id ? 'rgba(201,168,76,0.1)' : 'var(--bg2)'}; cursor: pointer; color: {category === cat.id ? 'var(--gold)' : 'var(--text3)'}; font-family: inherit; font-size: 9px; letter-spacing: 0.05em; transition: all 0.15s;"
+        style="display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 4px; border-radius: 6px; border: 1px solid {category === cat.id ? 'var(--gold)' : 'var(--border)'}; background: {category === cat.id ? 'rgba(201,168,76,0.1)' : 'var(--bg2)'}; cursor: pointer; color: {category === cat.id ? 'var(--gold)' : 'var(--text3)'}; font-family: inherit; font-size: 11px; letter-spacing: 0.05em; transition: all 0.15s;"
       >
         <span style="font-size: 18px;">{cat.emoji}</span>
-        <span>{cat.label}</span>
+        <span>{t(cat.labelKey)}</span>
       </button>
     {/each}
   </div>
 </div>
 
 <div class="form-group">
-  <label for="paidby">Pagado por</label>
+  <label for="paidby">{t('paid_by_label')}</label>
   <select id="paidby" bind:value={paidBy}>
     {#each currentMembers as m}
-      <option value={m.id}>{m.name} {m.is_self ? '(tú)' : ''}</option>
+      <option value={m.id}>{m.name} {m.is_self ? t('you') : ''}</option>
     {/each}
   </select>
 </div>
 
 <!-- Split between -->
 <div class="form-group">
-  <label>Dividir entre</label>
+  <label>{t('split_between')}</label>
   {#if currentMembers.length === 0}
-    <div style="font-size: 11px; color: var(--text3); padding: 8px 0;">Selecciona un grupo primero</div>
+    <div style="font-size: 11px; color: var(--text3); padding: 8px 0;">{t('select_group_first')}</div>
   {:else}
   <div style="display: flex; flex-wrap: wrap; gap: 6px;">
     {#each currentMembers as m}
@@ -324,7 +318,7 @@
         onclick={() => toggleMember(m.id)}
         style="display: flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 20px; border: 1px solid {selectedMembers.includes(m.id) ? 'var(--gold)' : 'var(--border)'}; background: {selectedMembers.includes(m.id) ? 'rgba(201,168,76,0.1)' : 'transparent'}; cursor: pointer; color: {selectedMembers.includes(m.id) ? 'var(--gold)' : 'var(--text3)'}; font-family: inherit; font-size: 11px; transition: all 0.15s;"
       >
-        <span style="width: 20px; height: 20px; border-radius: 50%; background: {m.avatar_color}; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 700; color: #0a0d14;">{m.name[0]}</span>
+        <span style="width: 20px; height: 20px; border-radius: 50%; background: {m.avatar_color}; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #0a0d14;">{m.name[0]}</span>
         {m.name}
       </button>
     {/each}
@@ -333,43 +327,43 @@
 </div>
 
 <div class="form-group">
-  <label for="date">Fecha</label>
+  <label for="date">{t('date')}</label>
   <input id="date" type="date" bind:value={date} />
 </div>
 
 <div class="form-group">
-  <label for="recurring">Repetir</label>
+  <label for="recurring">{t('repeat')}</label>
   <select id="recurring" bind:value={recurring}>
     {#each recurringOptions as opt}
-      <option value={opt.value}>{opt.label}</option>
+      <option value={opt.value}>{t(opt.labelKey)}</option>
     {/each}
   </select>
 </div>
 
 <div class="form-group">
-  <label>Modo de reparto</label>
+  <label>{t('split_mode')}</label>
   <div style="display: flex; gap: 6px;">
     <button
       onclick={() => splitMode = 'total'}
       style="flex:1; padding: 8px; border-radius: 6px; border: 1px solid {splitMode === 'total' ? 'var(--gold)' : 'var(--border)'}; background: {splitMode === 'total' ? 'rgba(201,168,76,0.1)' : 'transparent'}; color: {splitMode === 'total' ? 'var(--gold)' : 'var(--text3)'}; font-family: inherit; font-size: 11px; cursor: pointer; transition: all 0.15s;"
-    >Importe total</button>
+    >{t('total_amount')}</button>
     <button
       onclick={() => splitMode = 'items'}
       style="flex:1; padding: 8px; border-radius: 6px; border: 1px solid {splitMode === 'items' ? 'var(--gold)' : 'var(--border)'}; background: {splitMode === 'items' ? 'rgba(201,168,76,0.1)' : 'transparent'}; color: {splitMode === 'items' ? 'var(--gold)' : 'var(--text3)'}; font-family: inherit; font-size: 11px; cursor: pointer; transition: all 0.15s;"
-    >Por artículos</button>
+    >{t('per_item')}</button>
   </div>
 </div>
 
 {#if splitMode === 'items'}
   <div class="form-group">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-      <label style="margin-bottom: 0;">Artículos</label>
-      <button onclick={addItem} style="background: none; border: 1px solid var(--gold-dim); border-radius: 4px; color: var(--gold); font-size: 10px; padding: 3px 8px; cursor: pointer; font-family: inherit;">+ Añadir</button>
+      <label style="margin-bottom: 0;">{t('items')}</label>
+      <button onclick={addItem} style="background: none; border: 1px solid var(--gold-dim); border-radius: 4px; color: var(--gold); font-size: 12px; padding: 3px 8px; cursor: pointer; font-family: inherit;">+ {t('add')}</button>
     </div>
     {#each items as item, i}
       <div style="background: var(--bg2); border: 1px solid var(--border); border-radius: 6px; padding: 10px; margin-bottom: 8px;">
         <div style="display: flex; gap: 6px; margin-bottom: 6px;">
-          <input type="text" placeholder="Descripción" bind:value={item.description} style="flex: 1; font-size: 13px; padding: 7px 9px;" />
+          <input type="text" placeholder={t('item_description')} bind:value={item.description} style="flex: 1; font-size: 13px; padding: 7px 9px;" />
           <input type="text" inputmode="decimal" placeholder="€" bind:value={item.amount} style="width: 70px; font-size: 13px; padding: 7px 9px; text-align: right; font-family: 'Libre Baskerville', Georgia, serif;" />
           <button onclick={() => removeItem(i)} style="background: none; border: none; color: var(--red); cursor: pointer; font-size: 14px; padding: 4px;">✕</button>
         </div>
@@ -377,7 +371,7 @@
           {#each currentMembers as m}
             <button
               onclick={() => toggleItemMember(i, m.id)}
-              style="display: flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 12px; border: 1px solid {item.splitUserIds.includes(m.id) ? 'var(--gold)' : 'var(--border)'}; background: {item.splitUserIds.includes(m.id) ? 'rgba(201,168,76,0.1)' : 'transparent'}; cursor: pointer; color: {item.splitUserIds.includes(m.id) ? 'var(--gold)' : 'var(--text3)'}; font-family: inherit; font-size: 9px; transition: all 0.15s;"
+              style="display: flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 12px; border: 1px solid {item.splitUserIds.includes(m.id) ? 'var(--gold)' : 'var(--border)'}; background: {item.splitUserIds.includes(m.id) ? 'rgba(201,168,76,0.1)' : 'transparent'}; cursor: pointer; color: {item.splitUserIds.includes(m.id) ? 'var(--gold)' : 'var(--text3)'}; font-family: inherit; font-size: 11px; transition: all 0.15s;"
             >
               <span style="width: 14px; height: 14px; border-radius: 50%; background: {m.avatar_color}; display: flex; align-items: center; justify-content: center; font-size: 7px; font-weight: 700; color: #0a0d14;">{m.name[0]}</span>
               {m.name}
@@ -388,24 +382,24 @@
     {/each}
     {#if items.length > 0}
       <div style="text-align: right; font-size: 11px; color: var(--gold); font-family: 'Libre Baskerville', Georgia, serif;">
-        Total: {new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(computedItemsTotal)}
+        {t('total')}: {new Intl.NumberFormat(getLocale(), { style: 'currency', currency: 'EUR' }).format(computedItemsTotal)}
       </div>
     {/if}
   </div>
 {/if}
 
 <div class="form-group">
-  <label for="note">Nota (opcional)</label>
-  <input id="note" type="text" placeholder="Detalles extra..." bind:value={note} />
+  <label for="note">{t('note_optional')}</label>
+  <input id="note" type="text" placeholder={t('note_placeholder')} bind:value={note} />
 </div>
 
 <div style="margin-top: 20px; margin-bottom: 80px;">
   <button class="btn-gold" style="width: 100%; padding: 12px;" onclick={submit} disabled={saving}>
-    {saving ? 'Guardando...' : 'Añadir gasto'}
+    {saving ? t('saving_expense') : t('save_expense')}
   </button>
 </div>
 
-<!-- Fixed operator bar — only shows when amount field is focused -->
+<!-- Fixed operator bar -->
 {#if amountFocused}
   <div style="position: fixed; bottom: 0; left: 0; right: 0; z-index: 60; background: var(--bg); border-top: 1px solid var(--border); display: flex; padding: 6px 4px; padding-bottom: calc(6px + env(safe-area-inset-bottom));">
     {#each operators as op}

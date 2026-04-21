@@ -5,19 +5,19 @@ export type Lang = 'en' | 'es';
 
 const translations: Record<Lang, Record<string, string>> = { en, es };
 
-// Module-level reactive state for language
-let _forceUpdate = $state(0);
-let currentLang: Lang = $state(
-  typeof localStorage !== 'undefined'
-    ? (localStorage.getItem('split-lang') as Lang) || 'es'
-    : 'es'
-);
+// Simple module-level state (no Svelte runes — this is a .ts file)
+let currentLang: Lang = 'es';
+
+// Initialize from localStorage on client
+if (typeof localStorage !== 'undefined') {
+  const stored = localStorage.getItem('split-lang') as Lang;
+  if (stored === 'en' || stored === 'es') {
+    currentLang = stored;
+  }
+}
 
 export function t(key: string, params?: Record<string, string | number>): string {
-  // Reference _forceUpdate to make this reactive
-  void _forceUpdate;
-  const lang = currentLang;
-  let text = translations[lang]?.[key] || translations['es']?.[key] || key;
+  let text = translations[currentLang]?.[key] || translations['es']?.[key] || key;
   if (params) {
     for (const [k, v] of Object.entries(params)) {
       text = text.replace(`{${k}}`, String(v));
@@ -32,9 +32,12 @@ export function getLang(): Lang {
 
 export function setLang(lang: Lang): void {
   currentLang = lang;
-  _forceUpdate++;
   if (typeof localStorage !== 'undefined') {
     localStorage.setItem('split-lang', lang);
+  }
+  // Force page reload to apply new language everywhere
+  if (typeof window !== 'undefined') {
+    window.location.reload();
   }
 }
 

@@ -18,6 +18,18 @@ Thumbs.db
 !.env.example
 !.env.test
 
+# Database (SQLite — user data, never commit)
+data/
+*.db
+*.db-shm
+*.db-wal
+
+# Logs
+*.log
+
+# Test artifacts
+test-screenshots.cjs
+
 # Vite
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*

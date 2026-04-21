@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t, getLocale } from '$lib/i18n/index.js';
   let { data } = $props();
 
   const emojiList = ['🏠', '✈️', '🏖️', '🍕', '🎯', '🎄', '💍', '🚗', '⚽', '🎮', '🍻', '🎵', '🏔️', '🚢', '🎪'];
@@ -37,7 +38,7 @@
 
   async function submit() {
     if (!name.trim() || selectedMembers.length < 2) {
-      error = 'Añade nombre y al menos 2 personas';
+      error = t('at_least_2_people');
       return;
     }
     saving = true;
@@ -53,10 +54,10 @@
         const group = await res.json();
         window.location.href = `/groups/${group.id}`;
       } else {
-        error = 'Error al crear grupo';
+        error = t('error_creating');
       }
     } catch {
-      error = 'Error de conexión';
+      error = t('connection_error');
     } finally {
       saving = false;
     }
@@ -64,14 +65,14 @@
 </script>
 
 <svelte:head>
-  <title>Split — Nuevo grupo</title>
+  <title>Split — {t('new_group')}</title>
 </svelte:head>
 
 <div style="margin-bottom: 12px;">
-  <a href="/groups" style="font-size: 10px; color: var(--text3); letter-spacing: 0.05em;">← Grupos</a>
+  <a href="/groups" style="font-size: 12px; color: var(--text3); letter-spacing: 0.05em;">← {t('groups')}</a>
 </div>
 
-<div class="section-header" style="margin-bottom: 16px;">Nuevo grupo</div>
+<div class="section-header" style="margin-bottom: 16px;">{t('new_group')}</div>
 
 {#if error}
   <div style="background: rgba(255,77,106,0.1); border: 1px solid rgba(255,77,106,0.2); border-radius: 6px; padding: 10px 14px; margin-bottom: 12px; font-size: 12px; color: var(--red);">
@@ -81,7 +82,7 @@
 
 <!-- Emoji Picker -->
 <div class="form-group">
-  <label>Icono</label>
+  <label>{t('group_icon')}</label>
   <div style="display: flex; flex-wrap: wrap; gap: 6px;">
     {#each emojiList as e}
       <button
@@ -95,45 +96,45 @@
 </div>
 
 <div class="form-group">
-  <label for="name">Nombre del grupo</label>
-  <input id="name" type="text" placeholder="Ej: Viaje a Lisboa" bind:value={name} />
+  <label for="name">{t('group_name')}</label>
+  <input id="name" type="text" placeholder={t('group_name_placeholder')} bind:value={name} />
 </div>
 
 <!-- Default Currency -->
 <div class="form-group">
-  <label for="currency">Moneda predeterminada</label>
+  <label for="currency">{t('default_currency')}</label>
   <select id="currency" bind:value={defaultCurrency}>
     {#each data.currencies as curr}
       <option value={curr}>{curr}</option>
     {/each}
   </select>
-  <div style="font-size: 10px; color: var(--text3); margin-top: 4px;">Los gastos de este grupo se registrarán en esta moneda</div>
+  <div style="font-size: 12px; color: var(--text3); margin-top: 4px;">{t('currency_hint')}</div>
 </div>
 
 <!-- Members -->
 <div class="form-group">
-  <label>Miembros</label>
+  <label>{t('group_members')}</label>
   <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px;">
     {#each data.people as person}
       <button
         onclick={() => toggleMember(person.id)}
         style="display: flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 20px; border: 1px solid {selectedMembers.includes(person.id) ? 'var(--gold)' : 'var(--border)'}; background: {selectedMembers.includes(person.id) ? 'rgba(201,168,76,0.1)' : 'transparent'}; cursor: pointer; color: {selectedMembers.includes(person.id) ? 'var(--gold)' : 'var(--text3)'}; font-family: inherit; font-size: 11px; transition: all 0.15s;"
       >
-        <span style="width: 20px; height: 20px; border-radius: 50%; background: {person.avatar_color}; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 700; color: #0a0d14;">{person.name[0]}</span>
-        {person.name} {person.is_self ? '(tú)' : ''}
+        <span style="width: 20px; height: 20px; border-radius: 50%; background: {person.avatar_color}; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #0a0d14;">{person.name[0]}</span>
+        {person.name} {person.is_self ? t('you') : ''}
       </button>
     {/each}
   </div>
 
   <!-- Add new person inline -->
   <div style="display: flex; gap: 6px;">
-    <input type="text" inputmode="text" placeholder="Añadir persona..." bind:value={newMemberName} style="flex: 1;" />
-    <button class="btn-ghost" onclick={addMember} style="white-space: nowrap;">+ Añadir</button>
+    <input type="text" inputmode="text" placeholder={t('add_person')} bind:value={newMemberName} style="flex: 1;" />
+    <button class="btn-ghost" onclick={addMember} style="white-space: nowrap;">+ {t('add')}</button>
   </div>
 </div>
 
 <div style="margin-top: 20px;">
   <button class="btn-gold" style="width: 100%; padding: 12px;" onclick={submit} disabled={saving}>
-    {saving ? 'Creando...' : 'Crear grupo'}
+    {saving ? t('creating_group') : t('create_group_btn')}
   </button>
 </div>

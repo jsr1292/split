@@ -93,6 +93,41 @@
 }
 
 /* ══════════════════════════════════════
+   FONTS (self-hosted)
+   ══════════════════════════════════════ */
+
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: url('/fonts/JetBrainsMono-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: url('/fonts/JetBrainsMono-Medium.ttf') format('truetype');
+  font-weight: 500;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: url('/fonts/JetBrainsMono-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Libre Baskerville';
+  src: url('/fonts/LibreBaskerville-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Libre Baskerville';
+  src: url('/fonts/LibreBaskerville-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-display: swap;
+}
+
+/* ══════════════════════════════════════
    BASE
    ══════════════════════════════════════ */
 
@@ -107,8 +142,8 @@ html {
   background: var(--bg);
   color: var(--text);
   -webkit-font-smoothing: antialiased;
-  font-size: 14px;
-  line-height: 1.5;
+  font-size: 15px;
+  line-height: 1.6;
 }
 
 body {
@@ -202,7 +237,7 @@ body.keyboard-open .btn-fab {
   background: none;
   border: none;
   color: var(--text3);
-  font-size: 9px;
+  font-size: 11px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   padding: 4px 8px;
@@ -275,7 +310,7 @@ body.keyboard-open .btn-fab {
 }
 
 .stat-label {
-  font-size: 9px;
+  font-size: 11px;
   letter-spacing: 0.2em;
   text-transform: uppercase;
   color: var(--text3);
@@ -287,7 +322,7 @@ body.keyboard-open .btn-fab {
    ══════════════════════════════════════ */
 
 .section-header {
-  font-size: 9px;
+  font-size: 11px;
   letter-spacing: 0.2em;
   text-transform: uppercase;
   color: var(--text3);
@@ -306,7 +341,7 @@ body.keyboard-open .btn-fab {
   border: none;
   padding: 8px 16px;
   border-radius: 6px;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -322,7 +357,7 @@ body.keyboard-open .btn-fab {
   color: var(--text2);
   padding: 8px 16px;
   border-radius: 6px;
-  font-size: 10px;
+  font-size: 12px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   cursor: pointer;
@@ -373,7 +408,7 @@ input::placeholder { color: var(--text3); }
 
 label {
   display: block;
-  font-size: 9px;
+  font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.15em;
   color: var(--text3);
@@ -441,8 +476,8 @@ label {
 .text-red { color: var(--red); }
 .text-gold { color: var(--gold); }
 .text-muted { color: var(--text3); }
-.text-sm { font-size: 12px; }
-.text-xs { font-size: 10px; }
+.text-sm { font-size: 13px; }
+.text-xs { font-size: 12px; }
 .font-bold { font-weight: 700; }
 .font-mono { font-family: 'JetBrains Mono', monospace; }
 .font-serif { font-family: 'Libre Baskerville', Georgia, serif; }

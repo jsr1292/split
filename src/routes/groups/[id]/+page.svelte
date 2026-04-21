@@ -1,18 +1,19 @@
 <script lang="ts">
+  import { t, getLocale } from '$lib/i18n/index.js';
   let { data } = $props();
 
-  const categories: Record<string, string> = {
+  const categoryIcons: Record<string, string> = {
     food: '🍕', transport: '🚗', accommodation: '🏠', activities: '🎯',
     drinks: '🍺', shopping: '🛍️', utilities: '💡', health: '💊', other: '📌'
   };
 
   function fmt(n: number, curr?: string) {
     const currency = curr || data.group?.currency || 'EUR';
-    return new Intl.NumberFormat('es-ES', { style: 'currency', currency }).format(n);
+    return new Intl.NumberFormat(getLocale(), { style: 'currency', currency }).format(n);
   }
 
   function fmtUser(n: number) {
-    return new Intl.NumberFormat('es-ES', { style: 'currency', currency: data.userBaseCurrency || 'EUR' }).format(n);
+    return new Intl.NumberFormat(getLocale(), { style: 'currency', currency: data.userBaseCurrency || 'EUR' }).format(n);
   }
 
   function balanceLabel(n: number) {
@@ -37,7 +38,6 @@
 
   // Simplify balances into minimum transactions (greedy algorithm)
   function simplifyBalances(balances: any[]) {
-    // Net amount per user: positive = owed money, negative = owes money
     const net: Record<string, { name: string; amount: number }> = {};
     for (const b of balances) {
       if (!net[b.from_user]) net[b.from_user] = { name: b.from_name, amount: 0 };
@@ -113,7 +113,7 @@
       }
       window.location.reload();
     } catch {
-      alert('Error al liquidar');
+      alert(t('error'));
     } finally {
       settling = false;
     }
@@ -121,7 +121,7 @@
 </script>
 
 <svelte:head>
-  <title>Split — {data.group?.name || 'Grupo'}</title>
+  <title>Split — {data.group?.name || t('groups')}</title>
 </svelte:head>
 
 {#if data.group}
@@ -129,12 +129,12 @@
 
   <!-- Back link -->
   <div style="margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
-    <a href="/" style="font-size: 10px; color: var(--text3); letter-spacing: 0.05em; display: inline-flex; align-items: center; gap: 4px;">
-      ← Grupos
+    <a href="/" style="font-size: 12px; color: var(--text3); letter-spacing: 0.05em; display: inline-flex; align-items: center; gap: 4px;">
+      ← {t('groups')}
     </a>
     <div style="display: flex; gap: 10px; align-items: center;">
-      <button onclick={() => showInvite = true} style="background: none; border: none; color: var(--gold); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer;">🔗 Invitar</button>
-      <a href="/groups/{g.id}/edit" style="font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gold);">✏️</a>
+      <button onclick={() => showInvite = true} style="background: none; border: none; color: var(--gold); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer;">🔗 {t('invite')}</button>
+      <a href="/groups/{g.id}/edit" style="font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gold);">✏️</a>
     </div>
   </div>
 
@@ -142,16 +142,16 @@
   <div class="glass-card-static" style="text-align: center; padding: 20px; margin-bottom: 12px;">
     <div style="font-size: 36px; margin-bottom: 6px;">{g.emoji}</div>
     <div style="font-family: 'Libre Baskerville', Georgia, serif; font-size: 20px; font-weight: 700; color: var(--gold); margin-bottom: 4px;">{g.name}</div>
-    <div style="font-size: 9px; color: var(--text3); letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 4px;">{data.members.length} personas · {data.expenses.length} gastos</div>
-    <div style="font-size: 8px; color: var(--text3); letter-spacing: 0.1em; margin-bottom: 12px;">Moneda: {g.currency || 'EUR'}</div>
+    <div style="font-size: 11px; color: var(--text3); letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 4px;">{t('members_count', { count: data.members.length, count2: data.expenses.length })}</div>
+    <div style="font-size: 8px; color: var(--text3); letter-spacing: 0.1em; margin-bottom: 12px;">{t('currency')}: {g.currency || 'EUR'}</div>
     <div class="gold-divider"></div>
     <div style="margin-top: 12px;">
-      <div class="stat-label" style="margin-bottom: 4px;">Tu balance</div>
+      <div class="stat-label" style="margin-bottom: 4px;">{t('your_balance')}</div>
       <div class="stat-value" style="font-size: 26px;" class:text-green={data.myBalance > 0} class:text-red={data.myBalance < 0}>
         {balanceLabel(data.myBalance)}
       </div>
       {#if (g.currency || 'EUR') !== data.userBaseCurrency}
-        <div style="font-size: 10px; color: var(--text3); margin-top: 2px;">(≈ {fmt(data.myBalance, g.currency || 'EUR')})</div>
+        <div style="font-size: 12px; color: var(--text3); margin-top: 2px;">(≈ {fmt(data.myBalance, g.currency || 'EUR')})</div>
       {/if}
     </div>
   </div>
@@ -161,10 +161,10 @@
     <div class="glass-card-static" style="display: flex; align-items: center; gap: 10px; padding: 10px 14px; margin-bottom: 12px; background: rgba(201,168,76,0.05); border-color: rgba(201,168,76,0.15);">
       <span style="font-size: 18px;">💡</span>
       <div style="flex: 1;">
-        <div style="font-size: 10px; color: var(--text3); letter-spacing: 0.05em;">Siguiente pago</div>
+        <div style="font-size: 12px; color: var(--text3); letter-spacing: 0.05em;">{t('next_payment')}</div>
         <div style="font-size: 12px; font-weight: 600; color: var(--text2);">
-          <span style="width: 20px; height: 20px; border-radius: 50%; background: {data.suggestedPayer.avatar_color}; display: inline-flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 700; color: #0a0d14; margin-right: 4px;">{data.suggestedPayer.name[0]}</span>
-          {data.suggestedPayer.name} debería pagar la próxima cuenta
+          <span style="width: 20px; height: 20px; border-radius: 50%; background: {data.suggestedPayer.avatar_color}; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #0a0d14; margin-right: 4px;">{data.suggestedPayer.name[0]}</span>
+          {t('should_pay_next', { name: data.suggestedPayer.name })}
         </div>
       </div>
     </div>
@@ -173,13 +173,13 @@
   <!-- Category Breakdown -->
   {#if data.categories.length > 0}
     <div style="margin-bottom: 16px;">
-      <div class="section-header">Por categoría</div>
+      <div class="section-header">{t('by_category')}</div>
       <div style="display: flex; gap: 0; flex-wrap: wrap; margin-bottom: 12px;">
         {#each data.categories as cat}
           <div class="glass-card-static" style="flex: 1; min-width: 70px; text-align: center; padding: 8px 4px; margin: 3px;">
-            <div style="font-size: 16px; margin-bottom: 1px;">{categories[cat.category] || '📌'}</div>
-            <div style="font-family: 'Libre Baskerville', Georgia, serif; font-size: 10px; font-weight: 700; color: var(--gold);">{fmt(cat.total)}</div>
-            <div style="font-size: 7px; color: var(--text3);">{cat.count} gasto{cat.count !== 1 ? 's' : ''}</div>
+            <div style="font-size: 16px; margin-bottom: 1px;">{categoryIcons[cat.category] || '📌'}</div>
+            <div style="font-family: 'Libre Baskerville', Georgia, serif; font-size: 12px; font-weight: 700; color: var(--gold);">{fmt(cat.total)}</div>
+            <div style="font-size: 7px; color: var(--text3);">{cat.count} {cat.count !== 1 ? t('expenses') : t('expenses').replace('s','').trim()}</div>
           </div>
         {/each}
       </div>
@@ -187,11 +187,11 @@
       <div style="display: flex; flex-direction: column; gap: 6px;">
         {#each data.categories as cat}
           <div style="display: flex; align-items: center; gap: 8px;">
-            <div style="font-size: 14px; width: 20px; text-align: center; flex-shrink: 0;">{categories[cat.category] || '📌'}</div>
+            <div style="font-size: 14px; width: 20px; text-align: center; flex-shrink: 0;">{categoryIcons[cat.category] || '📌'}</div>
             <div style="flex: 1; height: 8px; background: rgba(255,255,255,0.05); border-radius: 4px; overflow: hidden;">
               <div style="height: 100%; width: {Math.round((cat.total / totalCatAmount) * 100)}%; background: linear-gradient(90deg, var(--gold), rgba(201,168,76,0.6)); border-radius: 4px; transition: width 0.3s ease;"></div>
             </div>
-            <div style="font-family: 'Libre Baskerville', Georgia, serif; font-size: 10px; font-weight: 700; color: var(--gold); min-width: 32px; text-align: right;">{Math.round((cat.total / totalCatAmount) * 100)}%</div>
+            <div style="font-family: 'Libre Baskerville', Georgia, serif; font-size: 12px; font-weight: 700; color: var(--gold); min-width: 32px; text-align: right;">{Math.round((cat.total / totalCatAmount) * 100)}%</div>
           </div>
         {/each}
       </div>
@@ -200,13 +200,13 @@
 
   <!-- Members -->
   <div style="margin-bottom: 16px;">
-    <div class="section-header">Miembros</div>
+    <div class="section-header">{t('group_members')}</div>
     <div style="display: flex; gap: 8px; flex-wrap: wrap;">
       {#each data.members as member}
         <div class="glass-card-static" style="display: flex; align-items: center; gap: 8px; padding: 8px 12px; margin-bottom: 0; flex: 1; min-width: 140px;">
           <div class="avatar" style="background: {member.avatar_color};">{member.name[0]}</div>
           <div>
-            <div style="font-size: 12px; font-weight: 600;">{member.name} {member.is_self ? '(tú)' : ''}</div>
+            <div style="font-size: 12px; font-weight: 600;">{member.name} {member.is_self ? t('you') : ''}</div>
           </div>
         </div>
       {/each}
@@ -216,13 +216,13 @@
   <!-- Balances (who owes whom) -->
   {#if data.balances.length > 0}
     <div style="margin-bottom: 16px;">
-      <div class="section-header">Saldos pendientes</div>
+      <div class="section-header">{t('pending_balances')}</div>
       {#each data.balances as b}
         <div class="glass-card" style="display: flex; align-items: center; gap: 10px; padding: 10px 14px;">
           <div style="flex: 1; min-width: 0;">
             <div style="font-size: 12px; font-weight: 500;">
               <span class:text-red={b.from_user === data.self?.id}>{b.from_name}</span>
-              <span style="color: var(--text3); font-size: 10px;"> le debe a </span>
+              <span style="color: var(--text3); font-size: 12px;"> {t('owed_by')} </span>
               <span class:text-green={b.to_user === data.self?.id}>{b.to_name}</span>
               <span style="font-size: 8px; color: var(--text3);"> ({b.currency || 'EUR'})</span>
             </div>
@@ -235,7 +235,7 @@
 
       <!-- Settle Up Button -->
       <div style="text-align: center; margin-top: 12px;">
-        <button class="btn-gold" style="font-size: 9px; padding: 10px 24px;" onclick={() => showSettle = true}>Liquidar deudas</button>
+        <button class="btn-gold" style="font-size: 11px; padding: 10px 24px;" onclick={() => showSettle = true}>{t('settle_debts')}</button>
       </div>
     </div>
   {/if}
@@ -245,11 +245,11 @@
     <div style="position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 200; display: flex; align-items: flex-end; justify-content: center;" onclick={() => showSettle = false}>
       <div style="background: var(--bg2); border-top: 1px solid var(--glass-border); border-radius: 16px 16px 0 0; width: 100%; max-width: 500px; max-height: 70vh; overflow-y: auto; padding: 20px;" onclick={(e) => e.stopPropagation()}>
         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
-          <div style="font-family: 'Libre Baskerville', Georgia, serif; font-size: 16px; font-weight: 700; color: var(--gold);">Liquidar deudas</div>
+          <div style="font-family: 'Libre Baskerville', Georgia, serif; font-size: 16px; font-weight: 700; color: var(--gold);">{t('settle_debts')}</div>
           <button onclick={() => showSettle = false} style="background: none; border: none; color: var(--text3); font-size: 18px; cursor: pointer;">✕</button>
         </div>
         <div style="font-size: 11px; color: var(--text3); margin-bottom: 16px;">
-          Transacciones mínimas para saldar todas las deudas:
+          {t('minimum_transactions')}
         </div>
 
         {#each suggestedSettlements as s, i}
@@ -261,7 +261,7 @@
                 <span style="color: var(--text3);"> → </span>
                 <span style="font-weight: 600;" class:text-green={s.to === data.self?.id}>{s.toName}</span>
               </div>
-              <div style="font-size: 9px; color: var(--text3);">Máximo: {fmt(s.amount)}</div>
+              <div style="font-size: 11px; color: var(--text3);">{t('max')}: {fmt(s.amount)}</div>
             </div>
             <div style="display: flex; align-items: center; gap: 4px;">
               <span style="color: var(--gold); font-size: 12px;">€</span>
@@ -277,12 +277,12 @@
         {/each}
 
         <div style="margin-top: 12px; padding: 10px 12px; background: rgba(201,168,76,0.08); border: 1px solid rgba(201,168,76,0.2); border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
-          <div style="font-size: 11px; color: var(--text3);">Total a liquidar</div>
+          <div style="font-size: 11px; color: var(--text3);">{t('total_to_settle')}</div>
           <div style="font-family: 'Libre Baskerville', Georgia, serif; font-size: 16px; font-weight: 700; color: var(--gold);">{fmt(totalToSettle)}</div>
         </div>
         <div style="text-align: center; margin-top: 12px;">
           <button class="btn-gold" style="width: 100%; padding: 12px;" onclick={confirmSettle} disabled={settling}>
-            {settling ? 'Liquidando...' : 'Liquidar ' + fmt(totalToSettle)}
+            {settling ? t('settling') : t('settle') + ' ' + fmt(totalToSettle)}
           </button>
         </div>
       </div>
@@ -294,11 +294,11 @@
     <div style="position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 200; display: flex; align-items: flex-end; justify-content: center;" onclick={() => showInvite = false}>
       <div style="background: var(--bg2); border-top: 1px solid var(--glass-border); border-radius: 16px 16px 0 0; width: 100%; max-width: 500px; padding: 20px;" onclick={(e) => e.stopPropagation()}>
         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
-          <div style="font-family: 'Libre Baskerville', Georgia, serif; font-size: 16px; font-weight: 700; color: var(--gold);">Invitar al grupo</div>
+          <div style="font-family: 'Libre Baskerville', Georgia, serif; font-size: 16px; font-weight: 700; color: var(--gold);">{t('invite_to_group')}</div>
           <button onclick={() => showInvite = false} style="background: none; border: none; color: var(--text3); font-size: 18px; cursor: pointer;">✕</button>
         </div>
         <div style="font-size: 12px; color: var(--text3); margin-bottom: 12px;">
-          Comparte este enlace para que otros se unan a <strong style="color: var(--text2);">{g.name}</strong>:
+          {t('share_link', { group: g.name })}
         </div>
         <div style="display: flex; gap: 8px; align-items: center;">
           <input
@@ -308,7 +308,7 @@
             style="flex: 1; background: var(--bg); border: 1px solid var(--glass-border); border-radius: 8px; color: var(--text2); font-size: 12px; padding: 10px 12px; font-family: 'JetBrains Mono', monospace;"
           />
           <button onclick={copyInviteLink} style="background: var(--gold); border: none; border-radius: 8px; color: #07090f; font-size: 11px; font-weight: 700; padding: 10px 14px; cursor: pointer; white-space: nowrap;">
-            {inviteLinkCopied ? '✓ Copiado' : 'Copiar'}
+            {inviteLinkCopied ? t('copied') : t('copy')}
           </button>
         </div>
       </div>
@@ -318,29 +318,29 @@
   <!-- Expenses -->
   <div>
     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
-      <div class="section-header" style="margin-bottom: 0; border-bottom: none; padding-bottom: 0;">Gastos</div>
+      <div class="section-header" style="margin-bottom: 0; border-bottom: none; padding-bottom: 0;">{t('expenses')}</div>
       <div style="display: flex; gap: 8px; align-items: center;">
-        <a href="/api/groups/{g.id}/export" style="color: var(--text3);" title="Exportar CSV">
+        <a href="/api/groups/{g.id}/export" style="color: var(--text3);" title={t('export')}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </a>
-        <a href="/expense/new?group={g.id}" style="font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase;">+ Añadir</a>
+        <a href="/expense/new?group={g.id}" style="font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;">+ {t('add')}</a>
       </div>
     </div>
 
     {#each data.expenses as exp}
       <a href="/expense/{exp.id}">
         <div class="glass-card" style="display: flex; align-items: center; gap: 12px; padding: 10px 14px;">
-          <div style="font-size: 20px; width: 30px; text-align: center; flex-shrink: 0;">{categories[exp.category] || '📌'}</div>
+          <div style="font-size: 20px; width: 30px; text-align: center; flex-shrink: 0;">{categoryIcons[exp.category] || '📌'}</div>
           <div style="flex: 1; min-width: 0;">
             <div style="font-weight: 500; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
               {exp.description}
               {#if exp.recurring}
-                <span title="{exp.recurring === 'weekly' ? 'Semanal' : exp.recurring === 'monthly' ? 'Mensual' : 'Anual'}" style="margin-left: 4px; font-size: 10px;">🔄</span>
+                <span title="{exp.recurring === 'weekly' ? t('weekly') : exp.recurring === 'monthly' ? t('monthly') : t('yearly')}" style="margin-left: 4px; font-size: 12px;">🔄</span>
               {/if}
             </div>
-            <div style="font-size: 9px; color: var(--text3); letter-spacing: 0.05em; margin-top: 1px;">
-              {new Date(exp.date).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })} · pagó {exp.paid_by_name}
-              {#if exp.recurring_parent_id}<span style="color: var(--gold-dim);"> ·实例</span>{/if}
+            <div style="font-size: 11px; color: var(--text3); letter-spacing: 0.05em; margin-top: 1px;">
+              {new Date(exp.date).toLocaleDateString(getLocale(), { day: 'numeric', month: 'short' })} · {t('paid_by')} {exp.paid_by_name}
+              {#if exp.recurring_parent_id}<span style="color: var(--gold-dim);"> ·{t('instance')}</span>{/if}
             </div>
           </div>
           <div style="font-family: 'Libre Baskerville', Georgia, serif; font-weight: 600; font-size: 13px;">{fmt(exp.amount, exp.currency || 'EUR')}</div>
@@ -350,7 +350,7 @@
 
     {#if data.expenses.length === 0}
       <div style="text-align: center; padding: 30px 20px; color: var(--text3); font-size: 12px;">
-        Sin gastos aún.
+        {t('no_expenses')}
       </div>
     {/if}
   </div>
@@ -358,23 +358,23 @@
   <!-- Add Expense Button -->
   <div style="text-align: center; margin-top: 16px; margin-bottom: 40px;">
     <a href="/expense/new?group={g.id}">
-      <button class="btn-gold" style="padding: 12px 32px;">+ Añadir gasto</button>
+      <button class="btn-gold" style="padding: 12px 32px;">+ {t('add_expense')}</button>
     </a>
   </div>
 
   <!-- Settlements -->
   {#if data.settlements.length > 0}
     <div style="margin-top: 16px;">
-      <div class="section-header">Liquidaciones</div>
+      <div class="section-header">{t('settlements')}</div>
       {#each data.settlements as s}
         <div class="glass-card" style="display: flex; align-items: center; gap: 10px; padding: 10px 14px;">
           <div style="font-size: 16px;">💸</div>
           <div style="flex: 1;">
             <div style="font-size: 12px;"><span style="font-weight: 600;">{s.from_name}</span> → <span style="font-weight: 600;">{s.to_name}</span></div>
-            <div style="font-size: 9px; color: var(--text3);">{new Date(s.date).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}</div>
+            <div style="font-size: 11px; color: var(--text3);">{new Date(s.date).toLocaleDateString(getLocale(), { day: 'numeric', month: 'short' })}</div>
           </div>
           <div style="font-family: 'Libre Baskerville', Georgia, serif; font-weight: 600; font-size: 13px; color: var(--green);">{fmt(s.amount)}</div>
-          <button onclick={async () => { if (confirm('¿Deshacer esta liquidación?')) { await fetch(`/api/settlements/${s.id}`, { method: 'DELETE' }); window.location.reload(); } }} style="background: none; border: none; color: var(--text3); font-size: 14px; cursor: pointer; padding: 4px;" title="Deshacer">✕</button>
+          <button onclick={async () => { if (confirm(t('confirm_undo'))) { await fetch(`/api/settlements/${s.id}`, { method: 'DELETE' }); window.location.reload(); } }} style="background: none; border: none; color: var(--text3); font-size: 14px; cursor: pointer; padding: 4px;" title={t('undo_settlement')}>✕</button>
         </div>
       {/each}
     </div>
@@ -383,7 +383,7 @@
 {:else}
   <div style="text-align: center; padding: 60px 20px;">
     <div style="font-size: 48px; margin-bottom: 16px;">🤷</div>
-    <p class="text-muted">Grupo no encontrado</p>
-    <a href="/" style="margin-top: 12px; display: inline-block;">← Volver</a>
+    <p class="text-muted">{t('group_not_found')}</p>
+    <a href="/" style="margin-top: 12px; display: inline-block;">{t('go_back')}</a>
   </div>
 {/if}

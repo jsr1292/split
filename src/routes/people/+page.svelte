@@ -1,16 +1,17 @@
 <script lang="ts">
+  import { t } from '$lib/i18n/index.js';
   let { data } = $props();
 </script>
 
 <svelte:head>
-  <title>Split — Personas</title>
+  <title>Split — {t('people')}</title>
 </svelte:head>
 
 <div style="margin-bottom: 12px;">
-  <a href="/" style="font-size: 10px; color: var(--text3); letter-spacing: 0.05em; display: inline-flex; align-items: center; gap: 4px;">← Inicio</a>
+  <a href="/" style="font-size: 12px; color: var(--text3); letter-spacing: 0.05em; display: inline-flex; align-items: center; gap: 4px;">← {t('home')}</a>
 </div>
 
-<div class="section-header" style="margin-bottom: 16px;">Personas</div>
+<div class="section-header" style="margin-bottom: 16px;">{t('people')}</div>
 
 <div style="display: flex; flex-direction: column; gap: 6px;">
   {#each data.people as p}
@@ -18,8 +19,8 @@
       <div class="glass-card" style="display: flex; align-items: center; gap: 12px; padding: 12px 14px;">
         <div class="avatar" style="background: {p.avatar_color};">{p.name[0]}</div>
         <div style="flex: 1;">
-          <div style="font-size: 12px; font-weight: 600;">{p.name} {p.is_self ? '(tú)' : ''}</div>
-          <div style="font-size: 9px; color: var(--text3);">{p.email || ''}</div>
+          <div style="font-size: 12px; font-weight: 600;">{p.name} {p.is_self ? t('you') : ''}</div>
+          <div style="font-size: 11px; color: var(--text3);">{p.email || ''}</div>
         </div>
         <div style="color: var(--text3); font-size: 12px;">→</div>
       </div>
