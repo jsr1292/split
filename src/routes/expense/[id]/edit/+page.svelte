@@ -171,14 +171,14 @@
   <input id="note" type="text" bind:value={note} maxlength="500" />
 </div>
 
-<div style="margin-top: 20px; margin-bottom: 80px;">
+<div style="margin-top: 20px; margin-bottom: 340px;">
   <button class="btn-gold" style="width: 100%; padding: 12px;" onclick={submit} disabled={saving}>
     {saving ? t('saving') : t('save_changes_expense')}
   </button>
 </div>
 
 {#if amountFocused}
-  <div class="custom-numpad">
+  <div class="custom-numpad" onmousedown={(e) => e.preventDefault()} ontouchstart={(e) => e.preventDefault()}>
     <div class="numpad-row operators-row">
       <button class="numpad-key op-key" onclick={() => opTap(' + ')}>+</button>
       <button class="numpad-key op-key" onclick={() => opTap(' - ')}>−</button>
