@@ -196,6 +196,9 @@ body.keyboard-open .bottom-nav,
 body.keyboard-open .btn-fab {
   display: none !important;
 }
+body.keyboard-open .page-container {
+  padding-bottom: 20px;
+}
 
 /* ══════════════════════════════════════
    STICKY TOP

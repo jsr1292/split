@@ -8,6 +8,20 @@
   let currentTheme = $state('dark');
   let pwaTopOffset = $state(0);
 
+  // Track keyboard state for operator bar visibility
+  $effect(() => {
+    if (!browser) return;
+    function onResize() {
+      const isOpen = visualViewport ? visualViewport.height < window.innerHeight * 0.85 : false;
+      document.body.classList.toggle('keyboard-open', isOpen);
+    }
+    if (visualViewport) {
+      visualViewport.addEventListener('resize', onResize);
+      onResize();
+    }
+    return () => { visualViewport?.removeEventListener('resize', onResize); };
+  });
+
   if (browser) {
     currentTheme = localStorage.getItem('split-theme') || 'dark';
   }
