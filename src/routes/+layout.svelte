@@ -69,26 +69,29 @@
     return currentPath.startsWith(path);
   }
 
+  // Track module-level lang as local $state so template reactivity works
   let currentLang = $state(getLang());
+  $effect(() => {
+    currentLang; // subscribe
+    // Sync with module-level lang on init
+    const sync = () => { currentLang = getLang(); };
+    // Watch for lang changes from cycleLang
+    const interval = setInterval(sync, 50);
+    return () => clearInterval(interval);
+  });
+
+  // Nav labels — derived reactively, no {#key} needed
+  const navLabels = $derived([
+    { path: '/', icon: 'home', label: currentLang === 'en' ? 'Home' : 'Inicio' },
+    { path: '/groups', icon: 'users', label: currentLang === 'en' ? 'Groups' : 'Grupos' },
+    { path: '/people', icon: 'user', label: currentLang === 'en' ? 'People' : 'Personas' },
+  ]);
 
   function cycleLang() {
     const next = currentLang === 'es' ? 'en' : 'es';
     setLang(next);
     currentLang = next;
   }
-
-  let langKey = $state(0);
-  $effect(() => {
-    currentLang;
-    langKey++;
-  });
-
-  // Nav items - call t() in template via {#key} to ensure reactivity
-  const navPaths = [
-    { path: '/', icon: 'home' },
-    { path: '/groups', icon: 'users' },
-    { path: '/people', icon: 'user' },
-  ];
 
   // Offline badge
   let isOnline = $state(true);
@@ -177,8 +180,7 @@
 
   <!-- Bottom Nav — OUTSIDE the flex wrapper so position:fixed is truly viewport-relative -->
   <nav class="bottom-nav">
-    {#key langKey}
-    {#each navPaths as item}
+    {#each navLabels as item}
       <a href={item.path}>
         <button class:active={isActive(item.path)} style={isActive(item.path) ? 'color: var(--gold); transform: scale(1.1);' : 'color: var(--text3); transform: scale(1);'}>
           {#if item.icon === 'home'}
@@ -188,17 +190,14 @@
           {:else}
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8z" stroke-linecap="round" stroke-linejoin="round"/></svg>
           {/if}
-          <span>{item.path === '/' ? t('nav_home') : item.path === '/groups' ? t('nav_groups') : t('nav_people')}</span>
+          <span>{item.label}</span>
         </button>
       </a>
     {/each}
-    {/key}
   </nav>
 
   <!-- FAB -->
-  {#key langKey}
-  <a href={fabHref()} class="btn-fab" style="{showFab ? '' : 'display: none;'}" title={t('add_expense')}>+</a>
-  {/key}
+  <a href={fabHref()} class="btn-fab" style="{showFab ? '' : 'display: none;'}" title={currentLang === 'en' ? 'Add expense' : 'Añadir gasto'}>+</a>
 
   <!-- Toast -->
   {#if toast}
