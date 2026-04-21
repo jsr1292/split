@@ -3,7 +3,7 @@
 Split bills with friends and family. No subscriptions, no data harvesting, runs on your own server.
 
 **Stack:** SvelteKit + SQLite (no backend setup needed)
-**Demo:** [split.example.com](http://localhost:3480)
+**Demo:** Run locally with `npm run dev`
 
 ---
 
