@@ -33,3 +33,4 @@ test-screenshots.cjs
 # Vite
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+screenshots.cjs
