@@ -1,8 +1,8 @@
 <script lang="ts">
-  import { t, getLocale } from '$lib/i18n/index.js';
+  import { t, getSystemLocale } from '$lib/i18n/index.js';
   let { data } = $props();
 
-  const fmt = (n: number) => new Intl.NumberFormat(getLocale(), { style: 'currency', currency: data.userBaseCurrency || 'EUR' }).format(n);
+  const fmt = (n: number) => new Intl.NumberFormat(getSystemLocale(), { style: 'currency', currency: data.userBaseCurrency || 'EUR' }).format(n);
 </script>
 
 <svelte:head>

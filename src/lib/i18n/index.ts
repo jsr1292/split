@@ -45,6 +45,14 @@ export function getLocale(): string {
   return currentLang === 'en' ? 'en-US' : 'es-ES';
 }
 
+// System locale for number/currency formatting — always follows the device, not the app UI language
+export function getSystemLocale(): string {
+  if (typeof navigator !== 'undefined') {
+    return navigator.language || navigator.languages?.[0] || 'es-ES';
+  }
+  return 'es-ES';
+}
+
 export function getLangLabel(): string {
   return currentLang === 'en' ? 'EN' : 'ES';
 }

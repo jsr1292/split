@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { t, getLocale } from '$lib/i18n/index.js';
+  import { t, getSystemLocale } from '$lib/i18n/index.js';
   let { data } = $props();
 
   const categories: Record<string, string> = {
@@ -9,7 +9,7 @@
 
   function fmt(n: number, curr?: string) {
     const currency = curr || 'EUR';
-    return new Intl.NumberFormat(getLocale(), { style: 'currency', currency }).format(n);
+    return new Intl.NumberFormat(getSystemLocale(), { style: 'currency', currency }).format(n);
   }
 
   async function deleteExpense() {
@@ -42,7 +42,7 @@
     <div style="font-size: 12px; color: var(--text3);">{t('currency')}: {exp.currency || 'EUR'}</div>
     <div style="font-size: 13px; font-weight: 500; margin-bottom: 4px;">{exp.description}</div>
     <div style="font-size: 11px; color: var(--text3); letter-spacing: 0.1em; text-transform: uppercase;">
-      {new Date(exp.date).toLocaleDateString(getLocale(), { day: 'numeric', month: 'long', year: 'numeric' })}
+      {new Date(exp.date).toLocaleDateString(getSystemLocale(), { day: 'numeric', month: 'long', year: 'numeric' })}
     </div>
     {#if exp.recurring}
       <div style="margin-top: 6px; font-size: 12px; color: var(--gold);">🔄 {exp.recurring === 'weekly' ? t('weekly') : exp.recurring === 'monthly' ? t('monthly') : t('yearly')}</div>

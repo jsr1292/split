@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { t, getLocale } from '$lib/i18n/index.js';
+  import { t, getSystemLocale } from '$lib/i18n/index.js';
   let { data } = $props();
   const e = data.expense;
 
@@ -115,7 +115,7 @@
     style="font-family: 'Libre Baskerville', Georgia, serif; font-size: 20px; text-align: center; padding: 14px;" />
   {#if amount && computedAmount !== null}
     <div style="text-align: center; margin-top: 6px; font-size: 12px; color: var(--gold); font-family: 'Libre Baskerville', Georgia, serif;">
-      = {new Intl.NumberFormat(getLocale(), { style: 'currency', currency: 'EUR' }).format(computedAmount)}
+      = {new Intl.NumberFormat(getSystemLocale(), { style: 'currency', currency: 'EUR' }).format(computedAmount)}
     </div>
   {/if}
 </div>

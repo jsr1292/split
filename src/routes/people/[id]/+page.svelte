@@ -1,9 +1,9 @@
 <script lang="ts">
-  import { t, getLocale } from '$lib/i18n/index.js';
+  import { t, getSystemLocale } from '$lib/i18n/index.js';
   let { data } = $props();
 
   function fmt(n: number) {
-    return new Intl.NumberFormat(getLocale(), { style: 'currency', currency: 'EUR' }).format(n);
+    return new Intl.NumberFormat(getSystemLocale(), { style: 'currency', currency: 'EUR' }).format(n);
   }
 
   function balanceLabel(n: number) {
@@ -79,7 +79,7 @@
         <div style="flex: 1; min-width: 0;">
           <div style="font-size: 12px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{exp.description}</div>
           <div style="font-size: 11px; color: var(--text3);">
-            {exp.group_emoji} {exp.group_name} · {new Date(exp.date).toLocaleDateString(getLocale(), { day: 'numeric', month: 'short' })} · {t('paid_by')} {exp.paid_by_name}
+            {exp.group_emoji} {exp.group_name} · {new Date(exp.date).toLocaleDateString(getSystemLocale(), { day: 'numeric', month: 'short' })} · {t('paid_by')} {exp.paid_by_name}
           </div>
         </div>
         <div style="font-family: 'Libre Baskerville', Georgia, serif; font-weight: 600; font-size: 13px;">{fmt(exp.amount)}</div>

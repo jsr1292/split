@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { t, getLocale } from '$lib/i18n/index.js';
+  import { t, getSystemLocale } from '$lib/i18n/index.js';
   let { data } = $props();
 
   const categoryIcons: Record<string, string> = {
@@ -9,11 +9,11 @@
 
   function fmt(n: number, curr?: string) {
     const currency = curr || data.group?.currency || 'EUR';
-    return new Intl.NumberFormat(getLocale(), { style: 'currency', currency }).format(n);
+    return new Intl.NumberFormat(getSystemLocale(), { style: 'currency', currency }).format(n);
   }
 
   function fmtUser(n: number) {
-    return new Intl.NumberFormat(getLocale(), { style: 'currency', currency: data.userBaseCurrency || 'EUR' }).format(n);
+    return new Intl.NumberFormat(getSystemLocale(), { style: 'currency', currency: data.userBaseCurrency || 'EUR' }).format(n);
   }
 
   function balanceLabel(n: number) {
@@ -339,7 +339,7 @@
               {/if}
             </div>
             <div style="font-size: 11px; color: var(--text3); letter-spacing: 0.05em; margin-top: 1px;">
-              {new Date(exp.date).toLocaleDateString(getLocale(), { day: 'numeric', month: 'short' })} · {t('paid_by')} {exp.paid_by_name}
+              {new Date(exp.date).toLocaleDateString(getSystemLocale(), { day: 'numeric', month: 'short' })} · {t('paid_by')} {exp.paid_by_name}
               {#if exp.recurring_parent_id}<span style="color: var(--gold-dim);"> ·{t('instance')}</span>{/if}
             </div>
           </div>
@@ -371,7 +371,7 @@
           <div class="emoji-icon" style="font-size: 16px;">💸</div>
           <div style="flex: 1;">
             <div style="font-size: 12px;"><span style="font-weight: 600;">{s.from_name}</span> → <span style="font-weight: 600;">{s.to_name}</span></div>
-            <div style="font-size: 11px; color: var(--text3);">{new Date(s.date).toLocaleDateString(getLocale(), { day: 'numeric', month: 'short' })}</div>
+            <div style="font-size: 11px; color: var(--text3);">{new Date(s.date).toLocaleDateString(getSystemLocale(), { day: 'numeric', month: 'short' })}</div>
           </div>
           <div style="font-family: 'Libre Baskerville', Georgia, serif; font-weight: 600; font-size: 13px; color: var(--green);">{fmt(s.amount)}</div>
           <button onclick={async () => { if (confirm(t('confirm_undo'))) { await fetch(`/api/settlements/${s.id}`, { method: 'DELETE' }); window.location.reload(); } }} style="background: none; border: none; color: var(--text3); font-size: 14px; cursor: pointer; padding: 4px;" title={t('undo_settlement')}>✕</button>

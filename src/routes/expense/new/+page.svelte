@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { t, getLocale } from '$lib/i18n/index.js';
+  import { t, getSystemLocale } from '$lib/i18n/index.js';
   let { data } = $props();
 
   const categoryList = [
@@ -273,12 +273,12 @@
   {#if amount && computedAmount !== null}
     <div style="text-align: center; margin-top: 6px; font-size: 12px; color: var(--gold); font-family: 'Libre Baskerville', Georgia, serif;">
       {#if currency === data.userBaseCurrency}
-        = {new Intl.NumberFormat(getLocale(), { style: 'currency', currency: currency }).format(computedAmount)}
+        = {new Intl.NumberFormat(getSystemLocale(), { style: 'currency', currency: currency }).format(computedAmount)}
       {:else if conversionPreview}
-        ≈ {new Intl.NumberFormat(getLocale(), { style: 'currency', currency: data.userBaseCurrency }).format(conversionPreview.amount)}
+        ≈ {new Intl.NumberFormat(getSystemLocale(), { style: 'currency', currency: data.userBaseCurrency }).format(conversionPreview.amount)}
         <span style="font-size: 11px; color: var(--text3);"> ({currency} → {data.userBaseCurrency})</span>
       {:else}
-        = {new Intl.NumberFormat(getLocale(), { style: 'currency', currency: currency }).format(computedAmount)}
+        = {new Intl.NumberFormat(getSystemLocale(), { style: 'currency', currency: currency }).format(computedAmount)}
       {/if}
     </div>
   {/if}
@@ -387,7 +387,7 @@
     {/each}
     {#if items.length > 0}
       <div style="text-align: right; font-size: 11px; color: var(--gold); font-family: 'Libre Baskerville', Georgia, serif;">
-        {t('total')}: {new Intl.NumberFormat(getLocale(), { style: 'currency', currency: 'EUR' }).format(computedItemsTotal)}
+        {t('total')}: {new Intl.NumberFormat(getSystemLocale(), { style: 'currency', currency: 'EUR' }).format(computedItemsTotal)}
       </div>
     {/if}
   </div>
