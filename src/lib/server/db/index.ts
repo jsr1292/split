@@ -84,5 +84,15 @@ function initSchema(db: Database.Database) {
     CREATE INDEX IF NOT EXISTS idx_expenses_group ON expenses(group_id);
     CREATE INDEX IF NOT EXISTS idx_expense_splits_expense ON expense_splits(expense_id);
     CREATE INDEX IF NOT EXISTS idx_settlements_group ON settlements(group_id);
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_expenses_idempotency ON expenses(idempotency_key) WHERE idempotency_key IS NOT NULL;
   `);
+
+  // Add idempotency_key column if it doesn't exist (for existing databases)
+  try {
+    db.exec(`ALTER TABLE expenses ADD COLUMN idempotency_key TEXT`);
+  } catch (e: any) {
+    if (!e.message.includes('duplicate column name')) {
+      // Ignore if column already exists
+    }
+  }
 }

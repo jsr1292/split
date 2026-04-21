@@ -4,31 +4,34 @@ import { createExpense, createRecurringInstances, createExpenseWithItems } from 
 
 export const POST: RequestHandler = async ({ request }) => {
   const body = await request.json();
-  const { groupId, description, amount, paidBy, splitType, category, date, note, splitUserIds, createdBy, recurring, items, currency } = body;
+  const { groupId, description, amount, paidBy, splitType, category, date, note, splitUserIds, createdBy, recurring, items, currency, idempotency_key } = body;
 
   if (!groupId || !description || !amount || !paidBy || !date || !splitUserIds?.length) {
     return json({ error: 'Missing required fields' }, { status: 400 });
   }
 
-  let expense;
+  let result;
   if (items && items.length > 0) {
-    expense = createExpenseWithItems(
+    result = createExpenseWithItems(
       groupId, description, parseFloat(amount), paidBy,
       splitType || 'equal', category || 'other', date,
       splitUserIds, createdBy, note, items, recurring, currency
     );
   } else {
-    expense = createExpense(
+    result = createExpense(
       groupId, description, parseFloat(amount), paidBy,
       splitType || 'equal', category || 'other', date,
-      splitUserIds, undefined, createdBy, note, recurring, undefined, currency
+      splitUserIds, undefined, createdBy, note, recurring, undefined, currency,
+      idempotency_key
     );
   }
 
-  // Generate recurring instances if this is a recurring expense
-  if (recurring && recurring !== 'no') {
+  const { expense, created } = result;
+
+  // Generate recurring instances if this is a recurring expense and it was newly created
+  if (recurring && recurring !== 'no' && created) {
     createRecurringInstances(expense, recurring);
   }
 
-  return json(expense);
+  return json({ expense, created });
 };

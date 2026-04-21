@@ -146,11 +146,14 @@
     saving = true;
     error = '';
     try {
+      // Generate idempotency key for deduplication
+      const idempotencyKey = crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
       let payload: any = {
         groupId, description, amount: computedAmount || parseFloat(amount),
         paidBy, category, date, note, currency,
         splitUserIds: selectedMembers, createdBy: data.self?.id,
-        recurring: recurring === 'no' ? null : recurring
+        recurring: recurring === 'no' ? null : recurring,
+        idempotency_key: idempotencyKey
       };
       if (splitMode === 'items' && items.length > 0) {
         payload.items = items.map(i => ({

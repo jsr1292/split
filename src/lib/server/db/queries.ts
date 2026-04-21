@@ -137,9 +137,19 @@ export function createExpense(
   groupId: string, description: string, amount: number, paidBy: string,
   splitType: string, category: string, date: string, splitUserIds: string[],
   exactShares?: Record<string, number>, createdBy?: string, note?: string,
-  recurring?: string, recurringParentId?: string, currency?: string
-) {
+  recurring?: string, recurringParentId?: string, currency?: string,
+  idempotencyKey?: string
+): { expense: any; created: boolean } {
   const db = getDb();
+
+  // Idempotency check: if key provided and exists, return existing expense
+  if (idempotencyKey) {
+    const existing = db.prepare('SELECT * FROM expenses WHERE idempotency_key = ?').get(idempotencyKey);
+    if (existing) {
+      return { expense: existing, created: false };
+    }
+  }
+
   const id = uuid();
   const expenseCurrency = currency || 'EUR';
 
@@ -150,9 +160,9 @@ export function createExpense(
 
   const insert = db.transaction(() => {
     db.prepare(`
-      INSERT INTO expenses (id, group_id, description, amount, currency, paid_by, split_type, category, date, note, created_by, recurring, recurring_parent_id)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(id, groupId, description, amount, finalCurrency, paidBy, splitType, category, date, note || null, createdBy || null, recurring || null, recurringParentId || null);
+      INSERT INTO expenses (id, group_id, description, amount, currency, paid_by, split_type, category, date, note, created_by, recurring, recurring_parent_id, idempotency_key)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(id, groupId, description, amount, finalCurrency, paidBy, splitType, category, date, note || null, createdBy || null, recurring || null, recurringParentId || null, idempotencyKey || null);
 
     // Calculate shares with base_amount in each user's base currency
     const insertSplit = db.prepare('INSERT INTO expense_splits (id, expense_id, user_id, share, base_currency, base_amount) VALUES (?, ?, ?, ?, ?, ?)');
@@ -178,7 +188,7 @@ export function createExpense(
   });
 
   insert();
-  return getExpenseById(id);
+  return { expense: getExpenseById(id), created: true };
 }
 
 export function createRecurringInstances(parentExpense: any, recurring: string) {
@@ -208,7 +218,7 @@ export function createRecurringInstances(parentExpense: any, recurring: string) 
 
     const dateStr = nextDate.toISOString().split('T')[0];
     const inst = createExpense(groupId, description, amount, paidBy, splitType, category, dateStr, splitUserIds, undefined, createdBy, note, null, parentId);
-    instances.push(inst);
+    instances.push(inst.expense);
   }
 
   return instances;
@@ -219,7 +229,7 @@ export function createExpenseWithItems(
   splitType: string, category: string, date: string, splitUserIds: string[],
   createdBy: string, note: string, items: { description: string; amount: number; splitUserIds: string[] }[],
   recurring?: string, currency?: string
-) {
+): { expense: any; created: boolean } {
   const db = getDb();
   const id = uuid();
   const expenseCurrency = currency || 'EUR';
@@ -247,7 +257,7 @@ export function createExpenseWithItems(
   });
 
   insert();
-  return getExpenseById(id);
+  return { expense: getExpenseById(id), created: true };
 }
 
 export function updateExpense(

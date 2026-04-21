@@ -44,12 +44,12 @@ async function getQueue() {
   });
 }
 
-async function clearQueue() {
+async function removeFromQueue(id) {
   const db = await openDB();
   return new Promise((resolve, reject) => {
     const tx = db.transaction('queue', 'readwrite');
     const store = tx.objectStore('queue');
-    const req = store.clear();
+    const req = store.delete(id);
     req.onsuccess = () => resolve();
     req.onerror = () => reject(req.error);
   });
@@ -66,17 +66,18 @@ async function syncQueue() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(item.data)
       });
+      // Remove this item from queue regardless of whether it was new or duplicate
+      await removeFromQueue(item.id);
     } catch (e) {
-      // If any fails, stop and keep remaining
+      // Network error — stop and keep remaining items in queue
       break;
     }
   }
-  await clearQueue();
 
   // Notify clients that sync is done
   const clients = await self.clients.matchAll();
   for (const client of clients) {
-    client.postMessage({ type: 'SYNC_COMPLETE' });
+    client.postMessage({ type: 'SYNC_COMPLETE', syncedCount: queue.length });
   }
 }
 
@@ -103,6 +104,10 @@ self.addEventListener('fetch', (e) => {
       fetch(e.request.clone()).catch(async () => {
         // Offline: queue the request
         const data = await e.request.clone().json();
+        // Ensure idempotency key exists for deduplication on replay
+        if (!data.idempotency_key) {
+          data.idempotency_key = crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+        }
         await addToQueue(data);
         // Return a fake success response
         return new Response(JSON.stringify({ queued: true, offline: true }), {
@@ -145,4 +150,11 @@ self.addEventListener('fetch', (e) => {
 // Listen for online event to trigger sync
 self.addEventListener('online', () => {
   syncQueue();
+});
+
+// Listen for manual force-sync messages from clients
+self.addEventListener('message', (e) => {
+  if (e.data?.type === 'FORCE_SYNC') {
+    syncQueue();
+  }
 });
