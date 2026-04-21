@@ -82,7 +82,11 @@ function initSchema(db: Database.Database) {
     );
 
     CREATE INDEX IF NOT EXISTS idx_expenses_group ON expenses(group_id);
+    CREATE INDEX IF NOT EXISTS idx_expenses_date ON expenses(date DESC, created_at DESC);
     CREATE INDEX IF NOT EXISTS idx_expense_splits_expense ON expense_splits(expense_id);
+    CREATE INDEX IF NOT EXISTS idx_expense_splits_user ON expense_splits(user_id);
+    CREATE INDEX IF NOT EXISTS idx_expense_items_expense ON expense_items(expense_id);
+    CREATE INDEX IF NOT EXISTS idx_expense_item_splits_item ON expense_item_splits(item_id);
     CREATE INDEX IF NOT EXISTS idx_settlements_group ON settlements(group_id);
     CREATE UNIQUE INDEX IF NOT EXISTS idx_expenses_idempotency ON expenses(idempotency_key) WHERE idempotency_key IS NOT NULL;
   `);
