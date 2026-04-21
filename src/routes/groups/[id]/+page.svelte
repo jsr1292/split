@@ -1,6 +1,22 @@
 <script lang="ts">
   import { t, getSystemLocale } from '$lib/i18n/index.js';
+  import { browser } from '$app/environment';
   let { data } = $props();
+
+  // Parallax header state
+  let headerParallax = $state({ translateY: 0, opacity: 1 });
+  $effect(() => {
+    if (!browser) return;
+    function onScroll() {
+      const scrollY = window.scrollY || document.documentElement.scrollTop;
+      const maxScroll = 120;
+      const shift = Math.min(scrollY * 0.3, maxScroll * 0.3);
+      const opacity = Math.max(1 - (scrollY / maxScroll) * 0.3, 0.7);
+      headerParallax = { translateY: shift, opacity };
+    }
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  });
 
   const categoryIcons: Record<string, string> = {
     food: '🍕', transport: '🚗', accommodation: '🏠', activities: '🎯',
@@ -25,8 +41,30 @@
   // Settle up state
   let showSettle = $state(false);
   let settling = $state(false);
+  let sheetTranslateY = $state(0);
+  let sheetStartY = 0;
+  let sheetTouchStartY = 0;
   let showInvite = $state(false);
   let inviteLinkCopied = $state(false);
+
+  function onSheetTouchStart(e: TouchEvent) {
+    sheetStartY = sheetTranslateY;
+    sheetTouchStartY = e.touches[0].clientY;
+  }
+  function onSheetTouchMove(e: TouchEvent) {
+    const dy = e.touches[0].clientY - sheetTouchStartY;
+    if (dy > 0) {
+      sheetTranslateY = sheetStartY + dy;
+      e.stopPropagation();
+    }
+  }
+  function onSheetTouchEnd() {
+    if (sheetTranslateY > 80) {
+      showSettle = false;
+    }
+    sheetTranslateY = 0;
+  }
+  $effect(() => { if (!showSettle) sheetTranslateY = 0; });
 
   function copyInviteLink() {
     const link = window.location.origin + '/groups/' + data.group.id + '/join';
@@ -149,7 +187,7 @@
   </div>
 
   <!-- Group Header -->
-  <div class="glass-card-static" style="text-align: center; padding: 20px; margin-bottom: 12px;">
+  <div class="glass-card-static group-header-card" style="text-align: center; padding: 20px; margin-bottom: 12px; transform: translateY({headerParallax.translateY}px); opacity: {headerParallax.opacity}; transition: transform 0.05s linear, opacity 0.05s linear;">
     <div class="emoji-icon" style="font-size: 36px; margin-bottom: 6px;">{g.emoji}</div>
     <div style="font-family: 'Libre Baskerville', Georgia, serif; font-size: 20px; font-weight: 700; color: var(--gold); margin-bottom: 4px;">{g.name}</div>
     <div style="font-size: 11px; color: var(--text3); letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 4px;">{t('members_count', { count: data.members.length, count2: data.expenses.length })}</div>
@@ -253,7 +291,9 @@
   <!-- Settle Up Panel -->
   {#if showSettle && suggestedSettlements.length > 0}
     <div style="position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 200; display: flex; align-items: flex-end; justify-content: center;" onclick={() => showSettle = false}>
-      <div style="background: var(--bg2); border-top: 1px solid var(--glass-border); border-radius: 16px 16px 0 0; width: 100%; max-width: 500px; max-height: 70vh; overflow-y: auto; padding: 20px; padding-bottom: calc(20px + max(env(safe-area-inset-bottom), 8px));" onclick={(e) => e.stopPropagation()}>
+      <div style="background: var(--bg2); border-top: 1px solid var(--glass-border); border-radius: 16px 16px 0 0; width: 100%; max-width: 500px; max-height: 70vh; overflow-y: auto; padding: 20px; padding-top: 12px; padding-bottom: calc(20px + max(env(safe-area-inset-bottom), 8px)); transform: translateY({sheetTranslateY}px); transition: transform 0.1s linear;" onclick={(e) => e.stopPropagation()} ontouchstart={onSheetTouchStart} ontouchmove={onSheetTouchMove} ontouchend={onSheetTouchEnd}>
+        <!-- Drag handle -->
+        <div style="width: 36px; height: 6px; background: var(--glass-border); border-radius: 3px; margin: 0 auto 8px;"></div>
         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
           <div style="font-family: 'Libre Baskerville', Georgia, serif; font-size: 16px; font-weight: 700; color: var(--gold);">{t('settle_debts')}</div>
           <button onclick={() => showSettle = false} style="background: none; border: none; color: var(--text3); font-size: 18px; cursor: pointer;">✕</button>

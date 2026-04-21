@@ -3,12 +3,52 @@
   let { data } = $props();
 
   const fmt = (n: number) => new Intl.NumberFormat(getSystemLocale(), { style: 'currency', currency: data.userBaseCurrency || 'EUR' }).format(n);
+
+  // Pull-to-refresh state
+  let pullDist = $state(0);
+  let isPulling = $state(false);
+  let isRefreshing = $state(false);
+  let touchStartY = 0;
+  let containerEl: HTMLElement | null = null;
+
+  function onTouchStart(e: TouchEvent) {
+    if (containerEl && containerEl.scrollTop <= 0) {
+      touchStartY = e.touches[0].clientY;
+      isPulling = true;
+    }
+  }
+  function onTouchMove(e: TouchEvent) {
+    if (!isPulling) return;
+    const dy = e.touches[0].clientY - touchStartY;
+    if (dy > 0) {
+      pullDist = Math.min(dy * 0.5, 80);
+      e.preventDefault();
+    }
+  }
+  function onTouchEnd() {
+    if (isPulling) {
+      if (pullDist > 50) {
+        isRefreshing = true;
+        window.location.reload();
+      }
+      pullDist = 0;
+      isPulling = false;
+    }
+  }
 </script>
 
 <svelte:head>
   <title>Splitrr</title>
 </svelte:head>
 
+<!-- Pull-to-refresh indicator -->
+<div style="position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:center;height:{isRefreshing ? 50 : pullDist}px;opacity:{isRefreshing || pullDist > 10 ? 1 : 0};transition:{isRefreshing ? 'height 0.3s,opacity 0.3s' : 'height 0.1s,opacity 0.2s'};pointer-events:none;">
+  <div style="color:var(--gold);font-size:12px;letter-spacing:0.1em;">
+    {isRefreshing ? '↻ Refreshing...' : pullDist > 10 ? '↓ Pull to refresh' : ''}
+  </div>
+</div>
+
+<div bind:this={containerEl} ontouchstart={onTouchStart} ontouchmove={onTouchMove} ontouchend={onTouchEnd} style="min-height:100%;">
 {#key data.refresh}
 {#if data.self && data.dashboard}
   {@const d = data.dashboard}
@@ -59,3 +99,4 @@
   </div>
 {/if}
 {/key}
+</div>

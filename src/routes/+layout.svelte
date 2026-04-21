@@ -1,6 +1,7 @@
 <script lang="ts">
   import '../app.css';
   import { page } from '$app/stores';
+  import { goto } from '$app/navigation';
   import { browser } from '$app/environment';
   import { t, setLang, getLang, getLangLabel } from '$lib/i18n/index.js';
   let { children, data } = $props();
@@ -43,7 +44,10 @@
     };
   });
 
+  function haptic() { if (navigator.vibrate) navigator.vibrate(10); }
+
   function cycleTheme() {
+    haptic();
     const themes = ['dark', 'oled', 'light'];
     const i = themes.indexOf(currentTheme);
     currentTheme = themes[(i + 1) % themes.length];
@@ -57,6 +61,102 @@
 
   let currentPath = $state('');
   $effect(() => { currentPath = $page.url.pathname; });
+
+  // Page transitions: track previous path for direction
+  let prevPath = $state('');
+  let pageKey = $state('');
+  let slideDir = $state<'left' | 'right' | ''>('right');
+  $effect(() => {
+    const p = $page.url.pathname;
+    if (prevPath && p !== prevPath) {
+      // back if new path is shorter (going up) or is parent
+      slideDir = p.length < prevPath.length ? 'right' : 'left';
+      pageKey = p + Date.now();
+    } else if (!prevPath) {
+      pageKey = p;
+    }
+    prevPath = p;
+  });
+
+  // Swipe to go back (edge swipe)
+  let edgeSwipeX = $state<number | null>(null);
+  $effect(() => {
+    if (!browser) return;
+    let startX = 0;
+    let startY = 0;
+    let started = false;
+    function onTouchStart(e: TouchEvent) {
+      const t2 = e.touches[0];
+      if (t2.clientX < 20) {
+        startX = t2.clientX;
+        startY = t2.clientY;
+        started = true;
+        edgeSwipeX = 0;
+      }
+    }
+    function onTouchMove(e: TouchEvent) {
+      if (!started || edgeSwipeX === null) return;
+      const dx = e.touches[0].clientX - startX;
+      const dy = Math.abs(e.touches[0].clientY - startY);
+      if (dx > 0) {
+        edgeSwipeX = Math.min(dx, 80);
+        e.preventDefault();
+      }
+    }
+    function onTouchEnd() {
+      if (started && edgeSwipeX !== null && edgeSwipeX > 60) {
+        window.history.back();
+      }
+      started = false;
+      edgeSwipeX = null;
+    }
+    document.addEventListener('touchstart', onTouchStart, { passive: true });
+    document.addEventListener('touchmove', onTouchMove, { passive: false });
+    document.addEventListener('touchend', onTouchEnd);
+    return () => {
+      document.removeEventListener('touchstart', onTouchStart);
+      document.removeEventListener('touchmove', onTouchMove);
+      document.removeEventListener('touchend', onTouchEnd);
+    };
+  });
+
+  // Tab swipe (Home /groups /people)
+  const tabPaths = ['/', '/groups', '/people'];
+  $effect(() => {
+    if (!browser) return;
+    let startX = 0;
+    let startY = 0;
+    let active = false;
+    function onTouchStart(e: TouchEvent) {
+      const t2 = e.touches[0];
+      const path = $page.url.pathname;
+      if (tabPaths.includes(path)) {
+        startX = t2.clientX;
+        startY = t2.clientY;
+        active = true;
+      }
+    }
+    function onTouchEnd(e: TouchEvent) {
+      if (!active) return;
+      active = false;
+      const dx = e.changedTouches[0].clientX - startX;
+      const dy = Math.abs(e.changedTouches[0].clientY - startY);
+      if (Math.abs(dx) > 80 && Math.abs(dy) < Math.abs(dx) * 0.6) {
+        const idx = tabPaths.indexOf($page.url.pathname);
+        if (dx < 0 && idx < tabPaths.length - 1) {
+          goto(tabPaths[idx + 1]);
+        } else if (dx > 0 && idx > 0) {
+          goto(tabPaths[idx - 1]);
+        }
+      }
+    }
+    document.addEventListener('touchstart', onTouchStart, { passive: true });
+    document.addEventListener('touchend', onTouchEnd);
+    return () => {
+      document.removeEventListener('touchstart', onTouchStart);
+      document.removeEventListener('touchend', onTouchEnd);
+    };
+  });
   let showFab = $derived(currentPath && !currentPath.includes('/expense/new') && !currentPath.includes('/edit') && !currentPath.includes('/groups/new') && !currentPath.includes('/auth') && !currentPath.includes('/search'));
   let fabHref = $derived(() => {
     const match = currentPath.match(/^\/groups\/([\w-]+)$/);
@@ -83,6 +183,23 @@
     return currentPath.startsWith(path);
   }
 
+  // Contextual header: toolbar title + back arrow
+  let showBack = $derived(
+    currentPath.match(/^\/groups\/[\w-]+$/) !== null ||
+    currentPath.match(/^\/expense\/(new|[\w-]+\/edit)$/) !== null
+  );
+  let toolbarTitle = $derived(() => {
+    if (currentPath === '/') return 'Splitrr';
+    if (currentPath === '/groups') return currentLang === 'en' ? 'Groups' : 'Grupos';
+    if (currentPath === '/people') return currentLang === 'en' ? 'People' : 'Personas';
+    if (currentPath.match(/^\/groups\/[\w-]+$/)) return '';
+    if (currentPath.match(/^\/expense\/new/)) return currentLang === 'en' ? 'Add Expense' : 'Añadir Gasto';
+    if (currentPath.match(/^\/expense\/[\w-]+\/edit$/)) return currentLang === 'en' ? 'Edit Expense' : 'Editar Gasto';
+    if (currentPath === '/search') return currentLang === 'en' ? 'Search' : 'Buscar';
+    return 'Splitrr';
+  });
+  let isSearchPage = $derived(currentPath === '/search');
+
   // Track module-level lang as local $state so template reactivity works
   let currentLang = $state(getLang());
   $effect(() => {
@@ -102,6 +219,7 @@
   ]);
 
   function cycleLang() {
+    haptic();
     const next = currentLang === 'es' ? 'en' : 'es';
     setLang(next);
     currentLang = next;
@@ -166,16 +284,23 @@
     <div class="site-top">
       <header class="site-header">
         <div style="display: flex; align-items: center; gap: 10px; color: var(--gold);">
-          <svg width="26" height="26" viewBox="0 0 40 40" fill="none" style="flex-shrink: 0;">
-            <!-- Top pill of the S -->
-            <rect x="8" y="4" width="20" height="12" rx="6" fill="currentColor" opacity="0.9"/>
-            <!-- Bottom pill of the S, offset to create the split -->
-            <rect x="12" y="24" width="20" height="12" rx="6" fill="currentColor" opacity="0.9"/>
-          </svg>
-          <span class="logo-text">Splitrr</span>
+          {#if showBack}
+            <a href="/groups" style="color: var(--text3); display: flex; align-items: center;" aria-label="Back">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M19 12H5M12 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </a>
+          {:else}
+            <svg width="26" height="26" viewBox="0 0 40 40" fill="none" style="flex-shrink: 0;">
+              <rect x="8" y="4" width="20" height="12" rx="6" fill="currentColor" opacity="0.9"/>
+              <rect x="12" y="24" width="20" height="12" rx="6" fill="currentColor" opacity="0.9"/>
+            </svg>
+          {/if}
+          <span class="logo-text">{toolbarTitle()}</span>
         </div>
         <div style="display: flex; align-items: center; gap: 12px;">
-          <a href="/search" style="color: var(--text3);" aria-label="Search">
+          {#if currentPath === '/groups'}
+            <a href="/groups/new" style="color: var(--gold); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;" aria-label="Add group">+</a>
+          {/if}
+          <a href="/search" style="color: {isSearchPage ? 'var(--gold)' : 'var(--text3)'};" aria-label="Search">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35" stroke-linecap="round"/></svg>
           </a>
           {#if !isOnline}
@@ -202,8 +327,10 @@
     </div>
 
     <!-- Content -->
-    <div class="page-container">
-      {@render children()}
+    <div class="page-container" style="transform: translateX({edgeSwipeX ?? 0}px); transition: transform 0.1s ease;">
+      {#key pageKey}
+        <div class="page-enter">{@render children()}</div>
+      {/key}
     </div>
 
   </div>
@@ -212,7 +339,7 @@
   <nav class="bottom-nav">
     {#each navLabels as item}
       <a href={item.path}>
-        <button class:active={isActive(item.path)} style={isActive(item.path) ? 'color: var(--gold); transform: scale(1.1);' : 'color: var(--text3); transform: scale(1);'}>
+        <button class:active={isActive(item.path)} style={isActive(item.path) ? 'color: var(--gold); transform: scale(1.1);' : 'color: var(--text3); transform: scale(1);'} onclick={haptic}>
           {#if item.icon === 'home'}
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 12l9-9 9 9M5 10v10a1 1 0 001 1h3a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1h3a1 1 0 001-1V10" stroke-linecap="round" stroke-linejoin="round"/></svg>
           {:else if item.icon === 'users'}
@@ -227,7 +354,7 @@
   </nav>
 
   <!-- FAB -->
-  <a href={fabHref()} class="btn-fab" style="{showFab ? '' : 'display: none;'}" title={currentLang === 'en' ? 'Add expense' : 'Añadir gasto'} aria-label="Add expense">+</a>
+  <a href={fabHref()} class="btn-fab" style="{showFab ? '' : 'display: none;'}" title={currentLang === 'en' ? 'Add expense' : 'Añadir gasto'} aria-label="Add expense" onclick={haptic}>+</a>
 
   <!-- Toast -->
   {#if toast}

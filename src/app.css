@@ -345,6 +345,17 @@ body.keyboard-open .page-container {
 }
 
 /* ══════════════════════════════════════
+   PAGE TRANSITIONS
+   ══════════════════════════════════════ */
+.page-enter {
+  animation: slideIn 0.2s ease forwards;
+}
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+/* ══════════════════════════════════════
    GLASS CARDS
    ══════════════════════════════════════ */
 

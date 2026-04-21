@@ -207,11 +207,15 @@
     }
   }
 
+  function haptic() { if (navigator.vibrate) navigator.vibrate(10); }
+
   function tapDigit(d: string) {
+    haptic();
     amount += d;
   }
 
   function opTap(val: string) {
+    haptic();
     keepBarOpen = true;
     if (val === 'backspace') {
       amount = amount.slice(0, -1);
