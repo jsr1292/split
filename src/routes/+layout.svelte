@@ -140,8 +140,13 @@
     <!-- Header -->
     <div class="site-top">
       <header class="site-header">
-        <div style="display: flex; align-items: center; gap: 10px;">
-          <span style="font-size: 18px;">💰</span>
+        <div style="display: flex; align-items: center; gap: 10px; color: var(--gold);">
+          <svg width="26" height="26" viewBox="0 0 40 40" fill="none" style="flex-shrink: 0;">
+            <!-- Top pill of the S -->
+            <rect x="8" y="4" width="20" height="12" rx="6" fill="currentColor" opacity="0.9"/>
+            <!-- Bottom pill of the S, offset to create the split -->
+            <rect x="12" y="24" width="20" height="12" rx="6" fill="currentColor" opacity="0.9"/>
+          </svg>
           <span class="logo-text">Splitrr</span>
         </div>
         <div style="display: flex; align-items: center; gap: 12px;">
