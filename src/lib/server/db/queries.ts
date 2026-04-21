@@ -468,9 +468,9 @@ export function getUserBalancesForGroups(groupIds: string[], userId: string): Re
   const placeholders = groupIds.map(() => '?').join(',');
   const db = getDb();
 
-  // Get all expense splits for this user across all groups
+  // Get all expense splits for this user across all groups (join through expenses to get group_id)
   const splits = db.prepare(`
-    SELECT es.group_id as group_id, es.base_amount, es.base_currency, e.paid_by
+    SELECT e.group_id as group_id, es.base_amount, es.base_currency, e.paid_by
     FROM expense_splits es
     JOIN expenses e ON es.expense_id = e.id
     WHERE es.user_id = ? AND e.group_id IN (${placeholders})
