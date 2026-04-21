@@ -273,7 +273,7 @@
 
 <div class="form-group">
   <label for="amount">{t('amount')}</label>
-  <div style="display: flex; gap: 8px; align-items: stretch;">
+  <div style="display: flex; gap: 8px; align-items: stretch; max-width: 100%;">
     <input
       id="amount"
       type="text"
@@ -290,7 +290,7 @@
     />
     <select
       bind:value={currency}
-      style="width: 80px; font-size: 14px; text-align: center; padding: 8px 4px;"
+      style="width: 80px; min-width: 60px; font-size: 14px; text-align: center; padding: 8px 4px;"
     >
       {#each data.currencies as curr}
         <option value={curr}>{curr}</option>
