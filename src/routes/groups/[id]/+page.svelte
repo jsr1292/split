@@ -4,15 +4,15 @@
   let { data } = $props();
 
   // Parallax header state
-  let headerParallax = $state({ translateY: 0, opacity: 1 });
+  let headerTranslateY = $state(0);
+  let headerOpacity = $state(1);
   $effect(() => {
     if (!browser) return;
     function onScroll() {
       const scrollY = window.scrollY || document.documentElement.scrollTop;
       const maxScroll = 120;
-      const shift = Math.min(scrollY * 0.3, maxScroll * 0.3);
-      const opacity = Math.max(1 - (scrollY / maxScroll) * 0.3, 0.7);
-      headerParallax = { translateY: shift, opacity };
+      headerTranslateY = Math.min(scrollY * 0.3, maxScroll * 0.3);
+      headerOpacity = Math.max(1 - (scrollY / maxScroll) * 0.3, 0.7);
     }
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
@@ -187,7 +187,7 @@
   </div>
 
   <!-- Group Header -->
-  <div class="glass-card-static group-header-card" style="text-align: center; padding: 20px; margin-bottom: 12px; transform: translateY({headerParallax.translateY}px); opacity: {headerParallax.opacity}; transition: transform 0.05s linear, opacity 0.05s linear;">
+  <div class="glass-card-static group-header-card" style="text-align: center; padding: 20px; margin-bottom: 12px; transform: translateY({headerTranslateY}px); opacity: {headerOpacity}; transition: transform 0.05s linear, opacity 0.05s linear;">
     <div class="emoji-icon" style="font-size: 36px; margin-bottom: 6px;">{g.emoji}</div>
     <div style="font-family: 'Libre Baskerville', Georgia, serif; font-size: 20px; font-weight: 700; color: var(--gold); margin-bottom: 4px;">{g.name}</div>
     <div style="font-size: 11px; color: var(--text3); letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 4px;">{t('members_count', { count: data.members.length, count2: data.expenses.length })}</div>
