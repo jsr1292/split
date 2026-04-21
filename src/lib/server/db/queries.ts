@@ -545,11 +545,14 @@ export function deleteSettlement(id: string) {
   getDb().prepare('DELETE FROM settlements WHERE id = ?').run(id);
 }
 
-export function updateGroup(id: string, name: string, emoji: string, memberIds: string[], defaultCurrency?: string) {
+export function updateGroup(id: string, name: string, emoji: string, memberIds: string[], defaultCurrency?: string, currencyMode?: string) {
   const db = getDb();
   db.transaction(() => {
-    if (defaultCurrency) {
-      db.prepare('UPDATE groups SET name = ?, emoji = ?, currency = ? WHERE id = ?').run(name, emoji, defaultCurrency, id);
+    if (defaultCurrency || currencyMode) {
+      const group = db.prepare('SELECT currency, currency_mode FROM groups WHERE id = ?').get(id) as any;
+      const curr = defaultCurrency || group?.currency || 'EUR';
+      const mode = currencyMode || group?.currency_mode || 'single';
+      db.prepare('UPDATE groups SET name = ?, emoji = ?, currency = ?, currency_mode = ?, base_currency = ? WHERE id = ?').run(name, emoji, curr, mode, curr, id);
     } else {
       db.prepare('UPDATE groups SET name = ?, emoji = ? WHERE id = ?').run(name, emoji, id);
     }

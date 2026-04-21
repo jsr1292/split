@@ -14,8 +14,8 @@ export const PUT: RequestHandler = async ({ params, request, locals }) => {
     return json({ error: 'Forbidden' }, { status: 403 });
   }
 
-  const { name, emoji, memberIds } = await request.json();
+  const { name, emoji, memberIds, currencyMode } = await request.json();
   if (!name) return json({ error: 'Name required' }, { status: 400 });
-  updateGroup(params.id, name, emoji, memberIds);
+  updateGroup(params.id, name, emoji, memberIds, currencyMode);
   return json({ ok: true });
 };
