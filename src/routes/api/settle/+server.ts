@@ -1,6 +1,6 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { createSettlement, getGroupMembers } from '$lib/server/db/queries';
+import { createSettlement, getGroupMembers, getGroupBalances } from '$lib/server/db/queries';
 
 export const POST: RequestHandler = async ({ request, locals }) => {
   if (!locals.user) return json({ error: 'Unauthorized' }, { status: 401 });
@@ -18,6 +18,15 @@ export const POST: RequestHandler = async ({ request, locals }) => {
   const members = getGroupMembers(groupId);
   if (!members.some((m: any) => m.account_id === locals.user!.id)) {
     return json({ error: 'Forbidden' }, { status: 403 });
+  }
+
+  // Check settlement doesn't exceed actual debt
+  const balances = getGroupBalances(groupId);
+  const actualDebt = balances
+    .filter((b: any) => b.from_user === fromUser && b.to_user === toUser)
+    .reduce((sum: number, b: any) => sum + b.amount, 0);
+  if (parsedAmount > actualDebt + 0.01) {
+    return json({ error: `Settlement amount (${parsedAmount.toFixed(2)}) exceeds actual debt (${actualDebt.toFixed(2)})` }, { status: 400 });
   }
 
   const id = createSettlement(groupId, fromUser, toUser, parsedAmount, date);

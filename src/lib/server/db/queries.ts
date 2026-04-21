@@ -284,16 +284,22 @@ export function createExpenseWithItems(
   groupId: string, description: string, amount: number, paidBy: string,
   splitType: string, category: string, date: string, splitUserIds: string[],
   createdBy: string, note: string, items: { description: string; amount: number; splitUserIds: string[] }[],
-  recurring?: string, currency?: string
+  recurring?: string, currency?: string, idempotencyKey?: string
 ): { expense: any; created: boolean } {
   const db = getDb();
   const id = uuid();
   const expenseCurrency = currency || 'EUR';
 
   // Idempotency check
-  if (idempotency_key) {
-    const existing = db.prepare('SELECT id FROM expenses WHERE id = (SELECT expense_id FROM idempotency_keys WHERE key = ?)').get(idempotency_key);
+  if (idempotencyKey) {
+    const existing = db.prepare('SELECT id FROM expenses WHERE id = (SELECT expense_id FROM idempotency_keys WHERE key = ?)').get(idempotencyKey);
     if (existing) return { expense: getExpenseById(existing.id), created: false };
+  }
+
+  // Validate items sum to total
+  const itemsTotal = items.reduce((s, i) => s + i.amount, 0);
+  if (Math.abs(itemsTotal - amount) > 0.01) {
+    throw new Error(`Items total (${itemsTotal.toFixed(2)}) does not match expense amount (${amount.toFixed(2)})`);
   }
 
   const insert = db.transaction(() => {
@@ -601,7 +607,7 @@ export function getUserBalancesForGroups(groupIds: string[], userId: string): Re
   for (const s of splits) {
     const bal = Math.round(s.base_amount * 100) / 100;
     if (s.paid_by === userId) {
-      // User paid → others owe user (don't add, split base_amount already reflects what user should receive)
+      // User paid → others owe user (split base_amount already reflects what user should receive, so we ADD it)
       // Actually: base_amount is what user owes payer. If payer is user, user is owed.
       balances[s.group_id] += bal;
     } else {
