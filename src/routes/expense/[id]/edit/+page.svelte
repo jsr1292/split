@@ -19,6 +19,17 @@
   let amount = $state(String(e.amount));
   let amountFocused = $state(false);
   let keepBarOpen = false;
+
+  function dismissNumpad() {
+    if (amountFocused && !keepBarOpen) {
+      amountFocused = false;
+      document.body.classList.remove('keyboard-open');
+      document.getElementById('amount')?.blur();
+    }
+  }
+  if (typeof window !== 'undefined') {
+    window.addEventListener('touchmove', dismissNumpad, { passive: true });
+  }
   let paidBy = $state(e.paid_by);
   let category = $state(e.category);
   let date = $state(e.date);

@@ -21,6 +21,18 @@
   let amountFocused = $state(false);
   let keepBarOpen = false;
 
+  // Dismiss numpad on scroll
+  function dismissNumpad() {
+    if (amountFocused && !keepBarOpen) {
+      amountFocused = false;
+      document.body.classList.remove('keyboard-open');
+      document.getElementById('amount')?.blur();
+    }
+  }
+  if (typeof window !== 'undefined') {
+    window.addEventListener('touchmove', dismissNumpad, { passive: true });
+  }
+
   let computedAmount = $derived.by(() => {
     if (!amount) return null;
     try {
