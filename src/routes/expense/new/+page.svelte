@@ -22,13 +22,15 @@
   let keepBarOpen = false;
   let barBottom = $state(0);
 
-  // Track keyboard height to position operator bar above it
+  function updateBarBottom() {
+    if (typeof window !== 'undefined' && visualViewport) {
+      barBottom = window.innerHeight - visualViewport!.height - visualViewport!.offsetTop;
+    }
+  }
+
   if (typeof window !== 'undefined' && visualViewport) {
-    visualViewport.addEventListener('resize', () => {
-      if (amountFocused) {
-        barBottom = window.innerHeight - visualViewport!.height - visualViewport!.offsetTop + 44;
-      }
-    });
+    visualViewport.addEventListener('resize', updateBarBottom);
+    visualViewport.addEventListener('scroll', updateBarBottom);
   }
 
   let computedAmount = $derived.by(() => {
@@ -202,7 +204,15 @@
     } else if (val === 'clear') {
       amount = '';
     } else {
-      amount += val;
+      // Prevent double operators (e.g., "5 +  + 3")
+      const lastChar = amount.trim().slice(-1);
+      const isOperator = ['+', '-', '*', '/'].some(op => val.includes(op));
+      if (isOperator && lastChar && ['+', '-', '*', '/', '('].includes(lastChar)) {
+        // Replace last operator instead of appending
+        amount = amount.trimEnd().slice(0, -1).trimEnd() + val;
+      } else {
+        amount += val;
+      }
     }
     document.getElementById('amount')?.focus();
     setTimeout(() => { keepBarOpen = false; }, 300);
@@ -263,7 +273,7 @@
       inputmode="decimal"
       placeholder="0.00"
       bind:value={amount}
-      onfocus={() => amountFocused = true}
+      onfocus={() => { amountFocused = true; updateBarBottom(); }}
       onblur={() => {
         setTimeout(() => {
           if (!keepBarOpen) amountFocused = false;
@@ -291,6 +301,8 @@
         = {new Intl.NumberFormat(getSystemLocale(), { style: 'currency', currency: currency }).format(computedAmount)}
       {/if}
     </div>
+  {:else if amount && computedAmount === null && /[\+\-\*\/]/.test(amount)}
+    <div style="text-align: center; margin-top: 6px; font-size: 11px; color: var(--red);">Invalid expression</div>
   {/if}
 </div>
 

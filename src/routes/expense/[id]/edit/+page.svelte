@@ -21,12 +21,15 @@
   let keepBarOpen = false;
   let barBottom = $state(0);
 
+  function updateBarBottom() {
+    if (typeof window !== 'undefined' && visualViewport) {
+      barBottom = window.innerHeight - visualViewport!.height - visualViewport!.offsetTop;
+    }
+  }
+
   if (typeof window !== 'undefined' && visualViewport) {
-    visualViewport.addEventListener('resize', () => {
-      if (amountFocused) {
-        barBottom = window.innerHeight - visualViewport!.height - visualViewport!.offsetTop + 44;
-      }
-    });
+    visualViewport.addEventListener('resize', updateBarBottom);
+    visualViewport.addEventListener('scroll', updateBarBottom);
   }
   let paidBy = $state(e.paid_by);
   let category = $state(e.category);
@@ -82,9 +85,19 @@
 
   function opTap(val: string) {
     keepBarOpen = true;
-    if (val === 'backspace') amount = amount.slice(0, -1);
-    else if (val === 'clear') amount = '';
-    else amount += val;
+    if (val === 'backspace') {
+      amount = amount.slice(0, -1);
+    } else if (val === 'clear') {
+      amount = '';
+    } else {
+      const lastChar = amount.trim().slice(-1);
+      const isOperator = ['+', '-', '*', '/'].some(op => val.includes(op));
+      if (isOperator && lastChar && ['+', '-', '*', '/', '('].includes(lastChar)) {
+        amount = amount.trimEnd().slice(0, -1).trimEnd() + val;
+      } else {
+        amount += val;
+      }
+    }
     document.getElementById('amount')?.focus();
     setTimeout(() => { keepBarOpen = false; }, 300);
   }
@@ -119,7 +132,7 @@
 <div class="form-group">
   <label for="amount">{t('amount')}</label>
   <input id="amount" type="text" inputmode="decimal" placeholder="0.00" bind:value={amount}
-    onfocus={() => amountFocused = true}
+    onfocus={() => { amountFocused = true; updateBarBottom(); }}
     onblur={() => setTimeout(() => { if (!keepBarOpen) amountFocused = false; }, 200)}
     style="font-family: 'Libre Baskerville', Georgia, serif; font-size: 20px; text-align: center; padding: 14px;" />
   {#if amount && computedAmount !== null}
