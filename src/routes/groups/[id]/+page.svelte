@@ -77,7 +77,7 @@
     return transactions;
   }
 
-  let suggestedSettlements = $state(simplifyBalances(data.balances));
+  let suggestedSettlements = $state(data.group ? simplifyBalances(data.balances) : []);
   let editedAmounts = $state<Record<number, string>>({});
 
   function getEditedAmount(i: number, original: number) {
