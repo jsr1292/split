@@ -24,7 +24,7 @@
   if (typeof window !== 'undefined' && visualViewport) {
     visualViewport.addEventListener('resize', () => {
       if (amountFocused) {
-        barBottom = window.innerHeight - visualViewport!.height - visualViewport!.offsetTop;
+        barBottom = window.innerHeight - visualViewport!.height - visualViewport!.offsetTop + 44;
       }
     });
   }
