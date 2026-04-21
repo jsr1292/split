@@ -419,9 +419,8 @@
   </button>
 </div>
 
-<!-- Custom numpad + operator bar -->
-{#if amountFocused}
-  <div class="custom-numpad" onmousedown={(e) => e.preventDefault()} ontouchstart={(e) => e.preventDefault()}>
+<!-- Custom numpad -->
+  <div class="custom-numpad" class:hiding={!amountFocused} onmousedown={(e) => e.preventDefault()} ontouchstart={(e) => e.preventDefault()}>
     <!-- Operators row -->
     <div class="numpad-row operators-row">
       <button class="numpad-key op-key" onclick={() => opTap(' + ')}>+</button>
@@ -454,4 +453,3 @@
       <button class="numpad-key done-key" onclick={() => { amountFocused = false; document.body.classList.remove('keyboard-open'); document.getElementById('amount')?.blur(); }}>OK</button>
     </div>
   </div>
-{/if}

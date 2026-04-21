@@ -456,6 +456,14 @@ body.keyboard-open .page-container {
   border-top: 1px solid var(--border);
   padding: 4px;
   padding-bottom: calc(4px + env(safe-area-inset-bottom));
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease;
+  transform: translateY(0);
+  opacity: 1;
+}
+.custom-numpad.hiding {
+  transform: translateY(100%);
+  opacity: 0;
+  pointer-events: none;
 }
 .numpad-row {
   display: flex;
