@@ -127,6 +127,14 @@
 
   let suggestedSettlements = $state(data.group ? simplifyBalances(data.balances) : []);
   let editedAmounts = $state<Record<number, string>>({});
+  let selectedSettlements = $state<Set<number>>(new Set());
+
+  $effect(() => {
+    // Select all by default when settlements change
+    const s = new Set<number>();
+    suggestedSettlements.forEach((_, i) => s.add(i));
+    selectedSettlements = s;
+  });
 
   function getEditedAmount(i: number, original: number) {
     const edited = editedAmounts[i];
@@ -136,7 +144,7 @@
     }
     return original;
   }
-  let totalToSettle = $derived(suggestedSettlements.reduce((sum, s, i) => sum + getEditedAmount(i, s.amount), 0));
+  let totalToSettle = $derived(suggestedSettlements.reduce((sum, s, i) => selectedSettlements.has(i) ? sum + getEditedAmount(i, s.amount) : sum, 0));
   let totalCatAmount = $derived(data.categories.reduce((s: number, c: any) => s + c.total, 0));
 
   async function confirmSettle() {
@@ -144,6 +152,7 @@
     const today = new Date().toISOString().split('T')[0];
     try {
       for (const [i, s] of suggestedSettlements.entries()) {
+        if (!selectedSettlements.has(i)) continue;
         const amount = getEditedAmount(i, s.amount);
         if (amount > 0.001) {
           await fetch('/api/settle', {
@@ -298,12 +307,14 @@
           <div style="font-family: 'Libre Baskerville', Georgia, serif; font-size: 16px; font-weight: 700; color: var(--gold);">{t('settle_debts')}</div>
           <button onclick={() => showSettle = false} style="background: none; border: none; color: var(--text3); font-size: 18px; cursor: pointer;">✕</button>
         </div>
-        <div style="font-size: 11px; color: var(--text3); margin-bottom: 16px;">
-          {t('minimum_transactions')}
+        <div style="font-size: 11px; color: var(--text3); margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
+          <span>{t('minimum_transactions')}</span>
+          <button onclick={() => { if (selectedSettlements.size === suggestedSettlements.length) { selectedSettlements = new Set(); } else { const ns = new Set<number>(); suggestedSettlements.forEach((_, i) => ns.add(i)); selectedSettlements = ns; } }} style="background: none; border: none; color: var(--gold); font-size: 11px; cursor: pointer; text-decoration: underline;">{selectedSettlements.size === suggestedSettlements.length ? 'Deselect all' : 'Select all'}</button>
         </div>
 
         {#each suggestedSettlements as s, i}
-          <div class="glass-card-static" style="display: flex; align-items: center; gap: 8px; padding: 10px 12px;">
+          <div class="glass-card-static" style="display: flex; align-items: center; gap: 8px; padding: 10px 12px; opacity: {selectedSettlements.has(i) ? '1' : '0.5'};">
+            <input type="checkbox" checked={selectedSettlements.has(i)} onchange={() => { const ns = new Set(selectedSettlements); if (ns.has(i)) ns.delete(i); else ns.add(i); selectedSettlements = ns; }} style="accent-color: #72D2A2; width: 18px; height: 18px; flex-shrink: 0;" />
             <div class="emoji-icon" style="font-size: 16px; width: 24px; text-align: center; flex-shrink: 0;">💸</div>
             <div style="flex: 1; min-width: 0;">
               <div style="font-size: 11px;">

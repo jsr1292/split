@@ -102,6 +102,10 @@ function initSchema(db: Database.Database) {
     CREATE INDEX IF NOT EXISTS idx_expense_items_expense ON expense_items(expense_id);
     CREATE INDEX IF NOT EXISTS idx_expense_item_splits_item ON expense_item_splits(item_id);
     CREATE INDEX IF NOT EXISTS idx_settlements_group ON settlements(group_id);
+    CREATE INDEX IF NOT EXISTS idx_settlements_from_user ON settlements(from_user);
+    CREATE INDEX IF NOT EXISTS idx_settlements_to_user ON settlements(to_user);
+    CREATE INDEX IF NOT EXISTS idx_group_members_user ON group_members(user_id);
+    CREATE INDEX IF NOT EXISTS idx_exchange_rates_lookup ON exchange_rates(from_currency, to_currency, date DESC);
     CREATE UNIQUE INDEX IF NOT EXISTS idx_expenses_idempotency ON expenses(idempotency_key) WHERE idempotency_key IS NOT NULL;
   `);
 

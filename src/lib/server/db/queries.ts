@@ -14,6 +14,16 @@ export function getUserById(id: string) {
   return getDb().prepare('SELECT * FROM users WHERE id = ?').get(id);
 }
 
+// Batch-fetch users by IDs — avoids N queries when splitting across many users
+export function getUsersByIds(ids: string[]): Record<string, any> {
+  if (ids.length === 0) return {};
+  const placeholders = ids.map(() => '?').join(',');
+  const rows = getDb().prepare(`SELECT * FROM users WHERE id IN (${placeholders})`).all(...ids) as any[];
+  const result: Record<string, any> = {};
+  for (const row of rows) result[row.id] = row;
+  return result;
+}
+
 export function getSelfUser(accountId?: string) {
   if (accountId) return getDb().prepare('SELECT * FROM users WHERE account_id = ?').get(accountId);
   return getDb().prepare('SELECT * FROM users WHERE is_self = 1').get();
@@ -205,6 +215,9 @@ export function createExpense(
     const equalRemainder = Math.round((amount - equalBase * splitCount) * 100) / 100;
     let remainderDistributed = false;
 
+    // Batch-fetch all split users — single query instead of N
+    const users = getUsersByIds(splitUserIds);
+
     for (const uid of splitUserIds) {
       let share: number;
       if (splitType === 'exact' && exactShares && exactShares[uid] !== undefined) {
@@ -218,8 +231,8 @@ export function createExpense(
         }
       }
 
-      // Get user's base currency
-      const user = getUserById(uid) as any;
+      // Get user's base currency (batch-fetched, zero extra queries)
+      const user = users[uid];
       const userBaseCurrency = user?.base_currency || 'EUR';
 
       // Calculate base_amount - convert from expense currency to user's base currency
@@ -296,13 +309,16 @@ export function createExpenseWithItems(
     const equalRemainder = Math.round((amount - equalBase * splitCount) * 100) / 100;
     let remainderDistributed = false;
 
+    // Batch-fetch all split users — single query instead of N
+    const users = getUsersByIds(splitUserIds);
+
     for (const uid of splitUserIds) {
       let share = equalBase;
       if (!remainderDistributed && equalRemainder > 0) {
         share = Math.round((equalBase + equalRemainder) * 100) / 100;
         remainderDistributed = true;
       }
-      const user = getUserById(uid) as any;
+      const user = users[uid];
       const userBaseCurrency = user?.base_currency || 'EUR';
       const rate = getCachedRate(date, expenseCurrency, userBaseCurrency);
       const baseAmount = Math.round(share * rate * 100) / 100;
@@ -355,11 +371,14 @@ export function updateExpense(
     const splitCount = data.splitUserIds.length;
     const insertSplit = db.prepare('INSERT INTO expense_splits (id, expense_id, user_id, share, base_currency, base_amount) VALUES (?, ?, ?, ?, ?, ?)');
 
+    // Batch-fetch all split users — single query instead of N
+    const users = getUsersByIds(data.splitUserIds);
+
     for (const uid of data.splitUserIds) {
       const share = Math.round((data.amount / splitCount) * 100) / 100;
 
-      // Get user's base currency
-      const user = getUserById(uid) as any;
+      // Get user's base currency (batch-fetched)
+      const user = users[uid];
       const userBaseCurrency = user?.base_currency || 'EUR';
 
       // Calculate base_amount
@@ -413,10 +432,11 @@ export function getGroupBalances(groupId: string): Balance[] {
     net[key] = (net[key] || 0) + (exp.base_amount || 0);
   }
 
+  // Settlements are recorded in the group's default currency — fetch once, not per settlement
+  const groupCurrency = (db.prepare('SELECT currency FROM groups WHERE id = ?').get(groupId) as any)?.currency || 'EUR';
+
   for (const s of settlements) {
-    // Settlements are recorded in the group's default currency
-    const settleCurrency = (getDb().prepare('SELECT currency FROM groups WHERE id = ?').get(groupId) as any)?.currency || 'EUR';
-    const key = netKey(s.from_user, s.to_user, settleCurrency);
+    const key = netKey(s.from_user, s.to_user, groupCurrency);
     net[key] = (net[key] || 0) - s.amount;
   }
 

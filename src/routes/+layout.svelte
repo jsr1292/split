@@ -203,8 +203,8 @@
     currentLang; // subscribe
     // Sync with module-level lang on init
     const sync = () => { currentLang = getLang(); };
-    // Watch for lang changes from cycleLang
-    const interval = setInterval(sync, 50);
+    // Watch for lang changes from cycleLang (500ms is plenty — setLang() also reloads the page)
+    const interval = setInterval(sync, 500);
     return () => clearInterval(interval);
   });
 
