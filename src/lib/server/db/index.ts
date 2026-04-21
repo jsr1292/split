@@ -38,6 +38,8 @@ function initSchema(db: Database.Database) {
       name TEXT NOT NULL,
       emoji TEXT DEFAULT '🏠',
       currency TEXT DEFAULT 'EUR',
+      currency_mode TEXT DEFAULT 'single',
+      base_currency TEXT DEFAULT 'EUR',
       created_at TEXT DEFAULT (datetime('now'))
     );
 
@@ -117,4 +119,8 @@ function initSchema(db: Database.Database) {
       // Ignore if column already exists
     }
   }
+
+  // Add currency_mode and base_currency to groups for existing databases
+  try { db.exec(`ALTER TABLE groups ADD COLUMN currency_mode TEXT DEFAULT 'single'`); } catch {}
+  try { db.exec(`ALTER TABLE groups ADD COLUMN base_currency TEXT DEFAULT 'EUR'`); } catch {}
 }

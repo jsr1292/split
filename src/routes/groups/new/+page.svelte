@@ -7,6 +7,7 @@
   let name = $state('');
   let emoji = $state('🏠');
   let defaultCurrency = $state('EUR');
+  let currencyMode = $state('single');
   let selectedMembers = $state<string[]>([data.self?.id || '']);
   let newMemberName = $state('');
   let saving = $state(false);
@@ -48,7 +49,7 @@
       const res = await fetch('/api/groups', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: name.trim(), emoji, memberIds: selectedMembers, defaultCurrency })
+        body: JSON.stringify({ name: name.trim(), emoji, memberIds: selectedMembers, defaultCurrency, currencyMode })
       });
       if (res.ok) {
         const group = await res.json();
@@ -109,6 +110,27 @@
     {/each}
   </select>
   <div style="font-size: 12px; color: var(--text3); margin-top: 4px;">{t('currency_hint')}</div>
+</div>
+
+<!-- Currency Mode -->
+<div class="form-group">
+  <label>Currency Mode</label>
+  <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 4px;">
+    <label style="display: flex; align-items: flex-start; gap: 8px; padding: 10px 12px; border-radius: 8px; border: 1px solid {currencyMode === 'single' ? '#72D2A2' : 'var(--border)'}; background: {currencyMode === 'single' ? 'rgba(114,210,162,0.08)' : 'transparent'}; cursor: pointer; font-size: 13px;">
+      <input type="radio" name="currencyMode" value="single" bind:group={currencyMode} style="accent-color: #72D2A2; margin-top: 2px;" />
+      <div>
+        <div style="font-weight: 600; color: var(--text);">Single currency</div>
+        <div style="font-size: 11px; color: var(--text3); margin-top: 2px;">All balances in {defaultCurrency}. Simple and easy.</div>
+      </div>
+    </label>
+    <label style="display: flex; align-items: flex-start; gap: 8px; padding: 10px 12px; border-radius: 8px; border: 1px solid {currencyMode === 'fx_lock' ? '#72D2A2' : 'var(--border)'}; background: {currencyMode === 'fx_lock' ? 'rgba(114,210,162,0.08)' : 'transparent'}; cursor: pointer; font-size: 13px;">
+      <input type="radio" name="currencyMode" value="fx_lock" bind:group={currencyMode} style="accent-color: #72D2A2; margin-top: 2px;" />
+      <div>
+        <div style="font-weight: 600; color: var(--text);">Fair FX</div>
+        <div style="font-size: 11px; color: var(--text3); margin-top: 2px;">Exchange rates locked when expense is added. Fair for mixed currencies.</div>
+      </div>
+    </label>
+  </div>
 </div>
 
 <!-- Members -->

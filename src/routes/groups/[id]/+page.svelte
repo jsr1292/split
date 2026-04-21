@@ -200,7 +200,7 @@
     <div class="emoji-icon" style="font-size: 36px; margin-bottom: 6px;">{g.emoji}</div>
     <div style="font-family: 'Libre Baskerville', Georgia, serif; font-size: 20px; font-weight: 700; color: var(--gold); margin-bottom: 4px;">{g.name}</div>
     <div style="font-size: 11px; color: var(--text3); letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 4px;">{t('members_count', { count: data.members.length, count2: data.expenses.length })}</div>
-    <div style="font-size: 8px; color: var(--text3); letter-spacing: 0.1em; margin-bottom: 12px;">{t('currency')}: {g.currency || 'EUR'}</div>
+    <div style="font-size: 8px; color: var(--text3); letter-spacing: 0.1em; margin-bottom: 12px;">{t('currency')}: {g.currency || 'EUR'}{g.currency_mode === 'fx_lock' ? ' · Fair FX' : ''}</div>
     <div class="gold-divider"></div>
     <div style="margin-top: 12px;">
       <div class="stat-label" style="margin-bottom: 4px;">{t('your_balance')}</div>

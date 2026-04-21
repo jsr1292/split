@@ -57,11 +57,13 @@ export function getGroupById(id: string) {
   return getDb().prepare('SELECT * FROM groups WHERE id = ?').get(id);
 }
 
-export function createGroup(name: string, emoji: string, memberIds: string[], defaultCurrency?: string) {
+export function createGroup(name: string, emoji: string, memberIds: string[], defaultCurrency?: string, currencyMode?: string) {
   const db = getDb();
   const id = uuid();
+  const currency = defaultCurrency || 'EUR';
+  const mode = currencyMode || 'single';
   const insert = db.transaction(() => {
-    db.prepare('INSERT INTO groups (id, name, emoji, currency) VALUES (?, ?, ?, ?)').run(id, name, emoji, defaultCurrency || 'EUR');
+    db.prepare('INSERT INTO groups (id, name, emoji, currency, currency_mode, base_currency) VALUES (?, ?, ?, ?, ?, ?)').run(id, name, emoji, currency, mode, currency);
     const insertMember = db.prepare('INSERT OR IGNORE INTO group_members (group_id, user_id) VALUES (?, ?)');
     for (const uid of memberIds) {
       insertMember.run(id, uid);
@@ -410,9 +412,14 @@ export interface Balance {
 
 export function getGroupBalances(groupId: string): Balance[] {
   const db = getDb();
+  const group = db.prepare('SELECT currency, currency_mode, base_currency FROM groups WHERE id = ?').get(groupId) as any;
+  const groupCurrency = group?.currency || 'EUR';
+  const currencyMode = group?.currency_mode || 'single';
+  const baseCurrency = group?.base_currency || groupCurrency;
+
   // Use base_amount for balances - each person's debt is in their own currency
   const expenses = db.prepare(`
-    SELECT e.paid_by, es.user_id as debtor, es.base_amount, es.base_currency
+    SELECT e.paid_by, es.user_id as debtor, es.base_amount, es.base_currency, es.share, e.currency as expense_currency
     FROM expenses e
     JOIN expense_splits es ON e.id = es.expense_id
     WHERE e.group_id = ? AND es.user_id != e.paid_by
@@ -424,25 +431,41 @@ export function getGroupBalances(groupId: string): Balance[] {
     WHERE group_id = ?
   `).all(groupId);
 
-  // Net balances tracked per currency
-  // Key: `${from}:${to}:${currency}` = amount that 'from' owes 'to' in 'currency'
+  // Net balances
   const net: Record<string, number> = {};
 
-  function netKey(from: string, to: string, currency: string) {
-    return `${from}:${to}:${currency}`;
+  function netKey(from: string, to: string) {
+    return `${from}:${to}`;
   }
 
-  for (const exp of expenses) {
-    // The debtor owes the payer in the debtor's base currency
-    const key = netKey(exp.debtor, exp.paid_by, exp.base_currency || 'EUR');
-    net[key] = (net[key] || 0) + (exp.base_amount || 0);
+  if (currencyMode === 'fx_lock') {
+    // Fair FX: convert everything to the group's base_currency using locked rates
+    for (const exp of expenses) {
+      // base_amount is already in the user's base currency
+      // For fx_lock, we want everything in the group's base_currency
+      // If the debtor's base_currency matches baseCurrency, use base_amount directly
+      // Otherwise convert from the expense currency using the locked rate
+      let amount: number;
+      if (exp.base_currency === baseCurrency) {
+        amount = exp.base_amount;
+      } else {
+        // Convert share (in expense currency) to base_currency using cached rate
+        const rate = getCachedRate('', exp.expense_currency, baseCurrency);
+        amount = Math.round(exp.share * rate * 100) / 100;
+      }
+      const key = netKey(exp.debtor, exp.paid_by);
+      net[key] = (net[key] || 0) + amount;
+    }
+  } else {
+    // Single currency: use share amounts directly (in expense currency)
+    for (const exp of expenses) {
+      const key = netKey(exp.debtor, exp.paid_by);
+      net[key] = (net[key] || 0) + exp.share;
+    }
   }
-
-  // Settlements are recorded in the group's default currency — fetch once, not per settlement
-  const groupCurrency = (db.prepare('SELECT currency FROM groups WHERE id = ?').get(groupId) as any)?.currency || 'EUR';
 
   for (const s of settlements) {
-    const key = netKey(s.from_user, s.to_user, groupCurrency);
+    const key = netKey(s.from_user, s.to_user);
     net[key] = (net[key] || 0) - s.amount;
   }
 
@@ -466,12 +489,12 @@ export function getGroupBalances(groupId: string): Balance[] {
 
   for (const [key, amount] of Object.entries(net)) {
     if (amount > 0.01) {
-      const [from, to, currency] = key.split(':');
+      const [from, to] = key.split(':');
       balances.push({
         from_user: from, from_name: userMap[from] || from,
         to_user: to, to_name: userMap[to] || to,
         amount: Math.round(amount * 100) / 100,
-        currency: currency
+        currency: currencyMode === 'fx_lock' ? baseCurrency : groupCurrency
       });
     }
   }
