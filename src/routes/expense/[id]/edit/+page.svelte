@@ -19,18 +19,6 @@
   let amount = $state(String(e.amount));
   let amountFocused = $state(false);
   let keepBarOpen = false;
-  let barBottom = $state(0);
-
-  function updateBarBottom() {
-    if (typeof window !== 'undefined' && visualViewport) {
-      barBottom = window.innerHeight - visualViewport!.height - visualViewport!.offsetTop;
-    }
-  }
-
-  if (typeof window !== 'undefined' && visualViewport) {
-    visualViewport.addEventListener('resize', updateBarBottom);
-    visualViewport.addEventListener('scroll', updateBarBottom);
-  }
   let paidBy = $state(e.paid_by);
   let category = $state(e.category);
   let date = $state(e.date);
@@ -105,13 +93,6 @@
     document.getElementById('amount')?.focus();
     setTimeout(() => { keepBarOpen = false; }, 300);
   }
-
-  const operators = [
-    { label: '+', val: ' + ' }, { label: '−', val: ' - ' },
-    { label: '×', val: ' * ' }, { label: '÷', val: ' / ' },
-    { label: '(', val: '(' }, { label: ')', val: ')' },
-    { label: '⌫', val: 'backspace' }, { label: 'C', val: 'clear' },
-  ];
 </script>
 
 <svelte:head>
@@ -197,7 +178,7 @@
 </div>
 
 {#if amountFocused}
-  <div class="custom-numpad" onclick={() => { keepBarOpen = true; document.getElementById('amount')?.focus(); setTimeout(() => keepBarOpen = false, 100); }}>
+  <div class="custom-numpad">
     <div class="numpad-row operators-row">
       <button class="numpad-key op-key" onclick={() => opTap(' + ')}>+</button>
       <button class="numpad-key op-key" onclick={() => opTap(' - ')}>−</button>
