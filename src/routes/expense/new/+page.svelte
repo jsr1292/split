@@ -20,6 +20,16 @@
   let amount = $state('');
   let amountFocused = $state(false);
   let keepBarOpen = false;
+  let barBottom = $state(0);
+
+  // Track keyboard height to position operator bar above it
+  if (typeof window !== 'undefined' && visualViewport) {
+    visualViewport.addEventListener('resize', () => {
+      if (amountFocused) {
+        barBottom = window.innerHeight - visualViewport!.height - visualViewport!.offsetTop;
+      }
+    });
+  }
 
   let computedAmount = $derived.by(() => {
     if (!amount) return null;
@@ -406,7 +416,7 @@
 
 <!-- Fixed operator bar -->
 {#if amountFocused}
-  <div style="position: fixed; bottom: 0; left: 0; right: 0; z-index: 60; background: var(--bg); border-top: 1px solid var(--border); display: flex; padding: 6px 4px; padding-bottom: calc(6px + env(safe-area-inset-bottom));">
+  <div style="position: fixed; bottom: {barBottom}px; left: 0; right: 0; z-index: 60; background: var(--bg); border-top: 1px solid var(--border); display: flex; padding: 6px 4px; padding-bottom: calc(6px + env(safe-area-inset-bottom));">
     {#each operators as op}
       <button
         onclick={() => opTap(op.val)}
