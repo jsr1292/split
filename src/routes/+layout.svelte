@@ -231,7 +231,7 @@
 
   <!-- Toast -->
   {#if toast}
-    <div style="position: fixed; top: {`calc(56px + max(env(safe-area-inset-top), 12px) + 8px)`}; left: 50%; transform: translateX(-50%); z-index: 500; background: {toast.type === 'success' ? 'rgba(0,229,160,0.15)' : 'rgba(201,168,76,0.15)'}; border: 1px solid {toast.type === 'success' ? 'rgba(0,229,160,0.3)' : 'rgba(201,168,76,0.3)'}; border-radius: 8px; padding: 8px 16px; font-size: 11px; color: {toast.type === 'success' ? 'var(--green)' : 'var(--gold)'}; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); transition: opacity 0.2s;" role="status">
+    <div class="toast-enter" style="position: fixed; top: {`calc(56px + max(env(safe-area-inset-top), 12px) + 8px)`}; left: 50%; transform: translateX(-50%); z-index: 500; background: {toast.type === 'success' ? 'rgba(0,229,160,0.15)' : 'rgba(201,168,76,0.15)'}; border: 1px solid {toast.type === 'success' ? 'rgba(0,229,160,0.3)' : 'rgba(201,168,76,0.3)'}; border-radius: 8px; padding: 8px 16px; font-size: 11px; color: {toast.type === 'success' ? 'var(--green)' : 'var(--gold)'}; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);" role="status">
       {toast.message}
     </div>
   {/if}
