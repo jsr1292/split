@@ -196,7 +196,7 @@
   </button>
 </div>
 
-  <div class="custom-numpad" class:hiding={!amountFocused} onmousedown={(e) => e.preventDefault()} ontouchstart={(e) => e.preventDefault()}>
+  <div class="custom-numpad" style="transform: translateY({amountFocused ? '0' : '100%'}); opacity: {amountFocused ? '1' : '0'}; pointer-events: {amountFocused ? 'auto' : 'none'};" onmousedown={(e) => e.preventDefault()} ontouchstart={(e) => e.preventDefault()}>
     <div class="numpad-row operators-row">
       <button class="numpad-key op-key" onclick={() => opTap(' + ')}>+</button>
       <button class="numpad-key op-key" onclick={() => opTap(' - ')}>−</button>
