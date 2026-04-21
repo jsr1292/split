@@ -22,7 +22,7 @@
 </script>
 
 <svelte:head>
-  <title>Split — {t('search')}</title>
+  <title>Splitrr — {t('search')}</title>
 </svelte:head>
 
 <div style="margin-bottom: 12px;">

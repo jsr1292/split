@@ -6,7 +6,7 @@
 </script>
 
 <svelte:head>
-  <title>Split</title>
+  <title>Splitrr</title>
 </svelte:head>
 
 {#key data.refresh}

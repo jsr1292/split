@@ -121,7 +121,7 @@
 </script>
 
 <svelte:head>
-  <title>Split — {data.group?.name || t('groups')}</title>
+  <title>Splitrr — {data.group?.name || t('groups')}</title>
 </svelte:head>
 
 {#if data.group}

@@ -36,13 +36,13 @@
 </script>
 
 <svelte:head>
-  <title>Split — {t('login_title')}</title>
+  <title>Splitrr — {t('login_title')}</title>
 </svelte:head>
 
 <div style="min-height: 100dvh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px;">
   <div style="text-align: center; margin-bottom: 32px;">
     <div style="font-size: 48px; margin-bottom: 8px;">💰</div>
-    <div style="font-family: 'Libre Baskerville', Georgia, serif; font-size: 28px; font-weight: 700; color: var(--gold);">Split</div>
+    <div style="font-family: 'Libre Baskerville', Georgia, serif; font-size: 28px; font-weight: 700; color: var(--gold);">Splitrr</div>
     <div style="font-size: 12px; color: var(--text3); letter-spacing: 0.15em; text-transform: uppercase; margin-top: 4px;">{t('tagline')}</div>
   </div>
 

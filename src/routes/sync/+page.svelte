@@ -85,7 +85,7 @@
 </script>
 
 <svelte:head>
-  <title>Split — Sync</title>
+  <title>Splitrr — Sync</title>
 </svelte:head>
 
 <div style="max-width: 480px; margin: 0 auto; padding: 20px 16px 80px;">

@@ -4,7 +4,7 @@
 </script>
 
 <svelte:head>
-  <title>Split — {t('people')}</title>
+  <title>Splitrr — {t('people')}</title>
 </svelte:head>
 
 <div style="margin-bottom: 12px;">

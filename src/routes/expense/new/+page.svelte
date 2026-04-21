@@ -211,7 +211,7 @@
 </script>
 
 <svelte:head>
-  <title>Split — {t('new_expense')}</title>
+  <title>Splitrr — {t('new_expense')}</title>
 </svelte:head>
 
 <!-- Back link -->

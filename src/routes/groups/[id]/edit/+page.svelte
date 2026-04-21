@@ -56,7 +56,7 @@
 </script>
 
 <svelte:head>
-  <title>Split — {t('editing_group')}</title>
+  <title>Splitrr — {t('editing_group')}</title>
 </svelte:head>
 
 <div style="margin-bottom: 12px;">

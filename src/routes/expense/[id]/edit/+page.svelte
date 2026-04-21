@@ -89,7 +89,7 @@
 </script>
 
 <svelte:head>
-  <title>Split — {t('edit_expense')}</title>
+  <title>Splitrr — {t('edit_expense')}</title>
 </svelte:head>
 
 <div style="margin-bottom: 12px;">

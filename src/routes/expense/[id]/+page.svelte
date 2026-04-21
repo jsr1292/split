@@ -22,7 +22,7 @@
 </script>
 
 <svelte:head>
-  <title>Split — {data.expense?.description || t('expenses')}</title>
+  <title>Splitrr — {data.expense?.description || t('expenses')}</title>
 </svelte:head>
 
 {#if data.expense}

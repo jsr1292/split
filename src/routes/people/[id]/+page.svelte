@@ -45,7 +45,7 @@
 </script>
 
 <svelte:head>
-  <title>Split — {data.person.name}</title>
+  <title>Splitrr — {data.person.name}</title>
 </svelte:head>
 
 <div style="margin-bottom: 12px;">

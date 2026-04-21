@@ -142,7 +142,7 @@
       <header class="site-header">
         <div style="display: flex; align-items: center; gap: 10px;">
           <span style="font-size: 18px;">💰</span>
-          <span class="logo-text">Split</span>
+          <span class="logo-text">Splitrr</span>
         </div>
         <div style="display: flex; align-items: center; gap: 12px;">
           <a href="/search" style="color: var(--text3);">

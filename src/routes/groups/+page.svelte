@@ -6,7 +6,7 @@
 </script>
 
 <svelte:head>
-  <title>Split — {t('groups')}</title>
+  <title>Splitrr — {t('groups')}</title>
 </svelte:head>
 
 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
