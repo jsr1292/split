@@ -368,26 +368,12 @@ export function getUserBalanceInGroup(groupId: string, userId: string): number {
   let total = 0;
   for (const b of balances) {
     if (b.to_user === userId) {
-      // User is owed this amount in the currency specified
-      const currency = b.currency || 'EUR';
-      if (currency === 'EUR') {
-        total += b.amount;
-      } else {
-        // Convert to EUR using cached rate
-        const rate = getCachedRate(new Date().toISOString().split('T')[0], currency, 'EUR');
-        total += b.amount * rate;
-      }
+      // b.amount is already in the user's base currency (base_amount from expense_splits)
+      // No conversion needed — sum directly
+      total += b.amount;
     }
     if (b.from_user === userId) {
-      // User owes this amount in the currency specified
-      const currency = b.currency || 'EUR';
-      if (currency === 'EUR') {
-        total -= b.amount;
-      } else {
-        // Convert to EUR using cached rate
-        const rate = getCachedRate(new Date().toISOString().split('T')[0], currency, 'EUR');
-        total -= b.amount * rate;
-      }
+      total -= b.amount;
     }
   }
   return Math.round(total * 100) / 100;
