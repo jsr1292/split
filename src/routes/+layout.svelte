@@ -126,13 +126,13 @@
 
 <!-- Auth pages: no nav, no header, no fixed UI -->
 {#if isAuthPage}
-  <div style="background: var(--bg); min-height: 100dvh;">
+  <div style="background: var(--bg); height: 100vh;">
     {@render children()}
   </div>
 
 {:else}
   <!-- Main app: flex column, header + content -->
-  <div style="background: var(--bg); min-height: 100dvh; padding-bottom: 0; display: flex; flex-direction: column;">
+  <div style="background: var(--bg); height: 100vh; padding-bottom: 0; display: flex; flex-direction: column;">
 
     <!-- Header -->
     <div class="site-top">

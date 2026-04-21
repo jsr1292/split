@@ -226,6 +226,9 @@ body.keyboard-open .btn-fab {
   justify-content: space-around;
   padding: 6px max(8px, env(safe-area-inset-left)) max(6px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-right));
   z-index: 50;
+  /* Force GPU compositing — fixes iOS Safari PWA nav flicker/jump */
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
 }
 
 .bottom-nav a { text-decoration: none; }
