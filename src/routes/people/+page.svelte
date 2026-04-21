@@ -15,8 +15,8 @@
 
 <div style="display: flex; flex-direction: column; gap: 6px;">
   {#each data.people as p}
-    <a href="/people/{p.id}">
-      <div class="glass-card" style="display: flex; align-items: center; gap: 12px; padding: 12px 14px;">
+    <a href="/people/{p.id}" style="text-decoration: none; display: block;">
+      <div class="glass-card card-interactive" style="display: flex; align-items: center; gap: 12px; padding: 12px 14px; margin-bottom: 10px;">
         <div class="avatar" style="background: {p.avatar_color};">{p.name[0]}</div>
         <div style="flex: 1;">
           <div style="font-size: 12px; font-weight: 600;">{p.name} {p.is_self ? t('you') : ''}</div>

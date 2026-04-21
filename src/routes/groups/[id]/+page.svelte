@@ -140,7 +140,7 @@
 
   <!-- Group Header -->
   <div class="glass-card-static" style="text-align: center; padding: 20px; margin-bottom: 12px;">
-    <div style="font-size: 36px; margin-bottom: 6px;">{g.emoji}</div>
+    <div class="emoji-icon" style="font-size: 36px; margin-bottom: 6px;">{g.emoji}</div>
     <div style="font-family: 'Libre Baskerville', Georgia, serif; font-size: 20px; font-weight: 700; color: var(--gold); margin-bottom: 4px;">{g.name}</div>
     <div style="font-size: 11px; color: var(--text3); letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 4px;">{t('members_count', { count: data.members.length, count2: data.expenses.length })}</div>
     <div style="font-size: 8px; color: var(--text3); letter-spacing: 0.1em; margin-bottom: 12px;">{t('currency')}: {g.currency || 'EUR'}</div>
@@ -159,7 +159,7 @@
   <!-- Who Should Pay Next -->
   {#if data.suggestedPayer}
     <div class="glass-card-static" style="display: flex; align-items: center; gap: 10px; padding: 10px 14px; margin-bottom: 12px; background: rgba(201,168,76,0.05); border-color: rgba(201,168,76,0.15);">
-      <span style="font-size: 18px;">💡</span>
+      <span class="emoji-icon" style="font-size: 18px;">💡</span>
       <div style="flex: 1;">
         <div style="font-size: 12px; color: var(--text3); letter-spacing: 0.05em;">{t('next_payment')}</div>
         <div style="font-size: 12px; font-weight: 600; color: var(--text2);">
@@ -177,7 +177,7 @@
       <div style="display: flex; gap: 0; flex-wrap: wrap; margin-bottom: 12px;">
         {#each data.categories as cat}
           <div class="glass-card-static" style="flex: 1; min-width: 70px; text-align: center; padding: 8px 4px; margin: 3px;">
-            <div style="font-size: 16px; margin-bottom: 1px;">{categoryIcons[cat.category] || '📌'}</div>
+            <div class="emoji-icon" style="font-size: 16px; margin-bottom: 1px;">{categoryIcons[cat.category] || '📌'}</div>
             <div style="font-family: 'Libre Baskerville', Georgia, serif; font-size: 12px; font-weight: 700; color: var(--gold);">{fmt(cat.total)}</div>
             <div style="font-size: 7px; color: var(--text3);">{cat.count} {cat.count !== 1 ? t('expenses') : t('expenses').replace('s','').trim()}</div>
           </div>
@@ -187,7 +187,7 @@
       <div style="display: flex; flex-direction: column; gap: 6px;">
         {#each data.categories as cat}
           <div style="display: flex; align-items: center; gap: 8px;">
-            <div style="font-size: 14px; width: 20px; text-align: center; flex-shrink: 0;">{categoryIcons[cat.category] || '📌'}</div>
+            <div class="emoji-icon" style="font-size: 14px; width: 20px; text-align: center; flex-shrink: 0;">{categoryIcons[cat.category] || '📌'}</div>
             <div style="flex: 1; height: 8px; background: rgba(255,255,255,0.05); border-radius: 4px; overflow: hidden;">
               <div style="height: 100%; width: {Math.round((cat.total / totalCatAmount) * 100)}%; background: linear-gradient(90deg, var(--gold), rgba(201,168,76,0.6)); border-radius: 4px; transition: width 0.3s ease;"></div>
             </div>
@@ -254,7 +254,7 @@
 
         {#each suggestedSettlements as s, i}
           <div class="glass-card-static" style="display: flex; align-items: center; gap: 8px; padding: 10px 12px;">
-            <div style="font-size: 16px; width: 24px; text-align: center; flex-shrink: 0;">💸</div>
+            <div class="emoji-icon" style="font-size: 16px; width: 24px; text-align: center; flex-shrink: 0;">💸</div>
             <div style="flex: 1; min-width: 0;">
               <div style="font-size: 11px;">
                 <span style="font-weight: 600;" class:text-red={s.from === data.self?.id}>{s.fromName}</span>
@@ -328,9 +328,9 @@
     </div>
 
     {#each data.expenses as exp}
-      <a href="/expense/{exp.id}">
-        <div class="glass-card" style="display: flex; align-items: center; gap: 12px; padding: 10px 14px;">
-          <div style="font-size: 20px; width: 30px; text-align: center; flex-shrink: 0;">{categoryIcons[exp.category] || '📌'}</div>
+      <a href="/expense/{exp.id}" style="text-decoration: none; display: block;">
+        <div class="glass-card card-interactive" style="display: flex; align-items: center; gap: 12px; padding: 10px 14px; margin-bottom: 10px;">
+          <div class="emoji-icon" style="font-size: 20px; width: 30px; text-align: center; flex-shrink: 0;">{categoryIcons[exp.category] || '📌'}</div>
           <div style="flex: 1; min-width: 0;">
             <div style="font-weight: 500; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
               {exp.description}
@@ -368,7 +368,7 @@
       <div class="section-header">{t('settlements')}</div>
       {#each data.settlements as s}
         <div class="glass-card" style="display: flex; align-items: center; gap: 10px; padding: 10px 14px;">
-          <div style="font-size: 16px;">💸</div>
+          <div class="emoji-icon" style="font-size: 16px;">💸</div>
           <div style="flex: 1;">
             <div style="font-size: 12px;"><span style="font-weight: 600;">{s.from_name}</span> → <span style="font-weight: 600;">{s.to_name}</span></div>
             <div style="font-size: 11px; color: var(--text3);">{new Date(s.date).toLocaleDateString(getLocale(), { day: 'numeric', month: 'short' })}</div>

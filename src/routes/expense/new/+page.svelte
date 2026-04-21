@@ -291,9 +291,11 @@
     {#each categoryList as cat}
       <button
         onclick={() => category = cat.id}
-        style="display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 4px; border-radius: 6px; border: 1px solid {category === cat.id ? 'var(--gold)' : 'var(--border)'}; background: {category === cat.id ? 'rgba(201,168,76,0.1)' : 'var(--bg2)'}; cursor: pointer; color: {category === cat.id ? 'var(--gold)' : 'var(--text3)'}; font-family: inherit; font-size: 11px; letter-spacing: 0.05em; transition: all 0.15s;"
+        onmouseover={(e) => { if (category !== cat.id) { (e.currentTarget as HTMLElement).style.borderColor = 'var(--gold-dim)'; (e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)'; } }}
+        onmouseout={(e) => { if (category !== cat.id) { (e.currentTarget as HTMLElement).style.borderColor = 'var(--border)'; (e.currentTarget as HTMLElement).style.transform = 'translateY(0)'; } }}
+        style="display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 4px; border-radius: 6px; border: 1px solid {category === cat.id ? 'var(--gold)' : 'var(--border)'}; background: {category === cat.id ? 'rgba(201,168,76,0.1)' : 'var(--bg2)'}; cursor: pointer; color: {category === cat.id ? 'var(--gold)' : 'var(--text3)'}; font-family: inherit; font-size: 11px; letter-spacing: 0.05em; transition: all 0.2s ease;"
       >
-        <span style="font-size: 18px;">{cat.emoji}</span>
+        <span class="emoji-icon" style="font-size: 18px;">{cat.emoji}</span>
         <span>{t(cat.labelKey)}</span>
       </button>
     {/each}

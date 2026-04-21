@@ -39,9 +39,9 @@
   </div>
 {:else}
   {#each results as exp}
-    <a href="/expense/{exp.id}">
-      <div class="glass-card" style="display: flex; align-items: center; gap: 10px; padding: 10px 14px;">
-        <div style="font-size: 18px;">{categoryEmojis[exp.category] || '📌'}</div>
+    <a href="/expense/{exp.id}" style="text-decoration: none; display: block;">
+      <div class="glass-card card-interactive" style="display: flex; align-items: center; gap: 10px; padding: 10px 14px; margin-bottom: 10px;">
+        <div class="emoji-icon" style="font-size: 18px;">{categoryEmojis[exp.category] || '📌'}</div>
         <div style="flex: 1; min-width: 0;">
           <div style="font-size: 12px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{exp.description}</div>
           <div style="font-size: 11px; color: var(--text3);">{exp.group_emoji} {exp.group_name} · {new Date(exp.date).toLocaleDateString(getLocale(), { day: 'numeric', month: 'short' })}</div>

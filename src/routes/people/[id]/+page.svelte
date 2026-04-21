@@ -73,9 +73,9 @@
 {#if data.sharedExpenses && data.sharedExpenses.length > 0}
   <div class="section-header">{t('shared_expenses')}</div>
   {#each data.sharedExpenses as exp}
-    <a href="/expense/{exp.id}">
-      <div class="glass-card" style="display: flex; align-items: center; gap: 10px; padding: 10px 14px;">
-        <div style="font-size: 18px; width: 28px; text-align: center; flex-shrink: 0;">{categories[exp.category] || '📌'}</div>
+    <a href="/expense/{exp.id}" style="text-decoration: none; display: block;">
+      <div class="glass-card card-interactive" style="display: flex; align-items: center; gap: 10px; padding: 10px 14px; margin-bottom: 10px;">
+        <div class="emoji-icon" style="font-size: 18px; width: 28px; text-align: center; flex-shrink: 0;">{categories[exp.category] || '📌'}</div>
         <div style="flex: 1; min-width: 0;">
           <div style="font-size: 12px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{exp.description}</div>
           <div style="font-size: 11px; color: var(--text3);">
@@ -91,9 +91,9 @@
 {#if data.groupBalances.length > 0}
   <div class="section-header">{t('shared_groups')}</div>
   {#each data.groupBalances as g}
-    <a href="/groups/{g.id}">
-      <div class="glass-card" style="display: flex; align-items: center; gap: 12px; padding: 12px 14px;">
-        <div style="font-size: 24px;">{g.emoji}</div>
+    <a href="/groups/{g.id}" style="text-decoration: none; display: block;">
+      <div class="glass-card card-interactive" style="display: flex; align-items: center; gap: 12px; padding: 12px 14px; margin-bottom: 10px;">
+        <div class="emoji-icon" style="font-size: 24px;">{g.emoji}</div>
         <div style="flex: 1;">
           <div style="font-size: 12px; font-weight: 500;">{g.name}</div>
           <div style="font-size: 11px; color: var(--text3);">{t('people_count', { count: g.member_count })}</div>

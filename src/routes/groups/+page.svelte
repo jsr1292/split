@@ -17,9 +17,9 @@
 </div>
 
 {#each data.groups as group}
-  <a href="/groups/{group.id}">
-    <div class="glass-card" style="display: flex; align-items: center; gap: 12px;">
-      <div style="font-size: 28px; width: 40px; text-align: center; flex-shrink: 0;">{group.emoji}</div>
+  <a href="/groups/{group.id}" style="text-decoration: none; display: block;">
+    <div class="glass-card card-interactive" style="display: flex; align-items: center; gap: 12px; padding: 12px 14px; margin-bottom: 14px;">
+      <div class="emoji-icon" style="font-size: 28px; width: 40px; text-align: center; flex-shrink: 0;">{group.emoji}</div>
       <div style="flex: 1; min-width: 0;">
         <div style="font-weight: 600; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{group.name}</div>
         <div style="font-size: 11px; color: var(--text3); letter-spacing: 0.05em; margin-top: 2px;">{t('members_count', { count: group.member_count, count2: group.expense_count })}</div>

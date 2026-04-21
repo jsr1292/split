@@ -37,7 +37,7 @@
 
   <!-- Expense Header -->
   <div class="glass-card-static" style="text-align: center; padding: 20px; margin-bottom: 12px;">
-    <div style="font-size: 36px; margin-bottom: 8px;">{categories[exp.category] || '📌'}</div>
+    <div class="emoji-icon" style="font-size: 36px; margin-bottom: 8px;">{categories[exp.category] || '📌'}</div>
     <div style="font-family: 'Libre Baskerville', Georgia, serif; font-size: 20px; font-weight: 700; color: var(--gold); margin-bottom: 4px;">{fmt(exp.amount, exp.currency || 'EUR')}</div>
     <div style="font-size: 12px; color: var(--text3);">{t('currency')}: {exp.currency || 'EUR'}</div>
     <div style="font-size: 13px; font-weight: 500; margin-bottom: 4px;">{exp.description}</div>

@@ -38,9 +38,9 @@
   <!-- Groups -->
   <div class="section-header">{t('groups')}</div>
   {#each d.groups as g}
-    <a href="/groups/{g.id}">
-      <div class="glass-card" style="display: flex; align-items: center; gap: 12px; padding: 12px 14px;">
-        <div style="font-size: 24px;">{g.emoji}</div>
+    <a href="/groups/{g.id}" style="text-decoration: none; display: block;">
+      <div class="glass-card card-interactive" style="display: flex; align-items: center; gap: 12px; padding: 12px 14px; margin-bottom: 14px;">
+        <div class="emoji-icon" style="font-size: 24px;">{g.emoji}</div>
         <div style="flex: 1;">
           <div style="font-size: 12px; font-weight: 500;">{g.name}</div>
           <div style="font-size: 11px; color: var(--text3);">{t('members_count', { count: g.member_count, count2: g.expense_count })}</div>
