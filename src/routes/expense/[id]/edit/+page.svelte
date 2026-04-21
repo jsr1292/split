@@ -94,9 +94,11 @@
 
   function tapDigit(d: string) {
     amount += d;
+    if (navigator.vibrate) navigator.vibrate(10);
   }
 
   function opTap(val: string) {
+    if (navigator.vibrate) navigator.vibrate(10);
     keepBarOpen = true;
     if (val === 'backspace') {
       amount = amount.slice(0, -1);

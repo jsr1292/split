@@ -42,7 +42,7 @@
 </svelte:head>
 
 <!-- Pull-to-refresh indicator -->
-<div style="position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:center;height:{isRefreshing ? 50 : pullDist}px;opacity:{isRefreshing || pullDist > 10 ? 1 : 0};transition:{isRefreshing ? 'height 0.3s,opacity 0.3s' : 'height 0.1s,opacity 0.2s'};pointer-events:none;">
+<div style="position:fixed;top:calc(56px + env(safe-area-inset-top));left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:center;height:{isRefreshing ? 50 : pullDist}px;opacity:{isRefreshing || pullDist > 10 ? 1 : 0};transition:{isRefreshing ? 'height 0.3s,opacity 0.3s' : 'height 0.1s,opacity 0.2s'};pointer-events:none;">
   <div style="color:var(--gold);font-size:12px;letter-spacing:0.1em;">
     {isRefreshing ? '↻ Refreshing...' : pullDist > 10 ? '↓ Pull to refresh' : ''}
   </div>

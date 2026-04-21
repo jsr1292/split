@@ -65,13 +65,10 @@
   // Page transitions: track previous path for direction
   let prevPath = $state('');
   let pageKey = $state('');
-  let slideDir = $state<'left' | 'right' | ''>('right');
   $effect(() => {
     const p = $page.url.pathname;
     if (prevPath && p !== prevPath) {
-      // back if new path is shorter (going up) or is parent
-      slideDir = p.length < prevPath.length ? 'right' : 'left';
-      pageKey = p + Date.now();
+      pageKey = p;
     } else if (!prevPath) {
       pageKey = p;
     }
@@ -87,7 +84,7 @@
     let started = false;
     function onTouchStart(e: TouchEvent) {
       const t2 = e.touches[0];
-      if (t2.clientX < 20) {
+      if (t2.clientX < 30) {
         startX = t2.clientX;
         startY = t2.clientY;
         started = true;
