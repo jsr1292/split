@@ -21,7 +21,7 @@
   let amountFocused = $state(false);
   let keepBarOpen = false;
 
-  // Dismiss numpad on scroll
+  // Dismiss numpad on scroll or tap outside
   function dismissNumpad() {
     if (amountFocused && !keepBarOpen) {
       amountFocused = false;
@@ -30,7 +30,15 @@
     }
   }
   if (typeof window !== 'undefined') {
-    window.addEventListener('touchmove', dismissNumpad, { passive: true });
+    // Dismiss on scroll
+    window.addEventListener('scroll', dismissNumpad, { passive: true });
+    // Dismiss on tap outside numpad
+    window.addEventListener('touchstart', (e) => {
+      const target = e.target as HTMLElement;
+      if (amountFocused && !keepBarOpen && !target.closest('.custom-numpad') && target.id !== 'amount') {
+        dismissNumpad();
+      }
+    }, { passive: true });
   }
 
   let computedAmount = $derived.by(() => {

@@ -28,7 +28,13 @@
     }
   }
   if (typeof window !== 'undefined') {
-    window.addEventListener('touchmove', dismissNumpad, { passive: true });
+    window.addEventListener('scroll', dismissNumpad, { passive: true });
+    window.addEventListener('touchstart', (e) => {
+      const target = e.target as HTMLElement;
+      if (amountFocused && !keepBarOpen && !target.closest('.custom-numpad') && target.id !== 'amount') {
+        dismissNumpad();
+      }
+    }, { passive: true });
   }
   let paidBy = $state(e.paid_by);
   let category = $state(e.category);
