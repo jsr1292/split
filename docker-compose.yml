@@ -1,0 +1,17 @@
+version: '3.8'
+services:
+  split:
+    build: .
+    image: ghcr.io/jsr1292/split:latest
+    ports:
+      - "3480:3480"
+    volumes:
+      - split-data:/app/data
+    environment:
+      - PORT=3480
+      - HOST=0.0.0.0
+      - NODE_ENV=production
+    restart: unless-stopped
+
+volumes:
+  split-data:

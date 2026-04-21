@@ -1,0 +1,27 @@
+{
+  "name": "Split",
+  "version": "1.0.0",
+  "slug": "split",
+  "description": "Self-hosted expense sharing app — Splitwise alternative",
+  "url": "https://github.com/jsr1292/split",
+  "image": "ghcr.io/jsr1292/split-{arch}",
+  "arch": ["amd64", "arm64"],
+  "startup": "application",
+  "boot": "auto",
+  "ports": {
+    "3480/tcp": 3480
+  },
+  "ports_description": {
+    "3480/tcp": "Web interface"
+  },
+  "webui": "http://[HOST]:[PORT:3480]",
+  "options": {
+    "port": 3480
+  },
+  "schema": {
+    "port": "int"
+  },
+  "ingress": true,
+  "ingress_port": 3480,
+  "ingress_entry": "/"
+}
