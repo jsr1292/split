@@ -1,37 +1,57 @@
 # Split — Self-hosted expense splitter
 
-Split bills with friends and family. No subscriptions, no data harvesting, runs on your own server.
+**Split** is a privacy-first expense sharing app you run on your own server. No subscriptions, no ads, no data harvesting — just a clean way to split bills with friends and family.
 
-**Stack:** SvelteKit + SQLite (no backend setup needed)
-**Demo:** Run locally with `npm run dev`
+> **Stack:** SvelteKit + SQLite · **Deploy:** Docker, Home Assistant, or any Node.js host
+
+---
+
+## Screenshots
+
+| Login | Dashboard | Groups |
+|:-----:|:---------:|:------:|
+| ![Login](screenshots/01-login.png) | ![Dashboard](screenshots/02-dashboard.png) | ![Groups](screenshots/03-groups.png) |
+
+| Group Detail | Add Expense | People |
+|:------------:|:-----------:|:------:|
+| ![Group Detail](screenshots/04-group-detail.png) | ![Add Expense](screenshots/05-add-expense.png) | ![People](screenshots/06-people.png) |
 
 ---
 
 ## Features
 
-- **Multi-currency** — Record expenses in any currency, convert to each user's base currency at historical rates via ECB exchange rates
-- **Debt simplification** — Greedy algorithm reduces N×M transfers to minimum possible
-- **Recurring expenses** — Weekly, monthly, yearly. Auto-generates future instances
-- **Item-level splitting** — Break expenses into line items, assign each to different people
-- **Offline PWA** — Add expenses offline, queue syncs when back online
-- **Multi-language** — English and Spanish, switchable in one tap
-- **Three themes** — Dark navy, OLED true black, warm light
-- **Invite links** — Share a `/groups/{id}/join` link to add members
-- **CSV export** — Download full group expense history
+### Core
+- **Multi-currency** — Record expenses in any of 33 currencies. Each person's debt is converted to their base currency at the historical exchange rate (ECB), so nobody takes a hit if rates change.
+- **Debt simplification** — Greedy algorithm reduces N×M possible transfers to the minimum. In a group of 4 with 12 messy IOUs, you might end up with just 3 clean payments.
+- **Recurring expenses** — Mark an expense as weekly, monthly, or yearly. Split generates the next 12 instances automatically.
+- **Item-level splitting** — Don't just split the total. Add line items (€15 pizza, €8 wine) and assign each to specific people.
+- **Partial settlements** — Settle up for any amount, not just the full balance.
+
+### UX
+- **Offline PWA** — Add expenses without internet. The service worker queues them in IndexedDB and syncs when you're back online.
+- **EN / ES** — Full Spanish and English support. Toggle in the header. Preference stored locally.
+- **Three themes** — Dark navy (default), OLED true black, warm light. Tap the palette icon in the header.
+- **Invite links** — Share a `/groups/{id}/join` link. Anyone with the link joins the group instantly.
+- **CSV export** — Download a group's full expense history as a CSV file.
+
+### Technical
+- **No backend setup** — SQLite + Node.js. One command to run.
+- **Self-hosted fonts** — JetBrains Mono for UI, Libre Baskerville for numbers. No Google Fonts dependency.
+- **Service worker** — Network-first for pages, cache-first for assets. Works offline.
+- **33 currencies** — EUR, GBP, USD, CHF, JPY, CAD, AUD, NZD, SEK, NOK, DKK, PLN, CZK, HUF, RON, BGN, HRK, TRY, BRL, MXN, CNY, INR, KRW, THB, SGD, HKD, ZAR, AED, ILS, PHP, TWD, MYR, IDR
 
 ---
 
 ## Quick Start
 
 ```bash
-# Clone and install
+git clone https://github.com/jsr1292/split.git
+cd split
 npm install
-
-# Start dev server
 npm run dev
 ```
 
-Open [http://localhost:3480](http://localhost:3480), create an account, and start splitting.
+Open [http://localhost:3480](http://localhost:3480), create your account, and start splitting.
 
 ---
 
@@ -63,7 +83,36 @@ git tag v1.0.0
 git push origin v1.0.0
 ```
 
-Builds amd64 + arm64, pushes to `ghcr.io/<owner>/split`.
+Builds `amd64` + `arm64` images and pushes to `ghcr.io/jsr1292/split`.
+
+---
+
+## Environment Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `PORT` | `3480` | Server port |
+| `SESSION_SECRET` | (auto-generated) | Session signing key. Set a persistent one for production. |
+| `NODE_ENV` | `development` | Set to `production` for production builds. |
+
+---
+
+## API
+
+All API routes are under `/api/`:
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `POST` | `/api/auth/login` | Login with email + password |
+| `POST` | `/api/auth/register` | Create account |
+| `POST` | `/api/auth/logout` | Logout |
+| `GET` | `/api/currencies` | List supported currencies |
+| `GET/POST` | `/api/rates` | Fetch exchange rates from ECB |
+| `GET` | `/api/search?q=` | Search groups, expenses, people |
+| `GET/POST` | `/api/groups/{id}` | Group CRUD |
+| `POST` | `/api/settle` | Record a settlement payment |
+| `POST` | `/api/groups/{id}/export` | Download group expenses as CSV |
+| `DELETE` | `/api/expenses/{id}` | Delete an expense |
 
 ---
 
@@ -73,45 +122,42 @@ Builds amd64 + arm64, pushes to `ghcr.io/<owner>/split`.
 |-------|--------|
 | UI | SvelteKit (Svelte 5) |
 | Database | SQLite + better-sqlite3 |
-| Auth | Session cookies + scrypt |
-| Styling | Custom CSS (dark glassmorphism) |
+| Auth | Session cookies + scrypt hashing |
+| Styling | Custom CSS — dark glassmorphism |
 | i18n | JSON-based, EN/ES |
 | Fonts | Self-hosted (JetBrains Mono, Libre Baskerville) |
-| PWA | Service worker + offline queue |
+| PWA | Service worker + IndexedDB offline queue |
+| Build | adapter-node for standalone production |
+| CI/CD | GitHub Actions — multi-arch Docker builds |
 
 ---
 
-## Supported Currencies
+## Project Structure
 
-EUR, GBP, USD, CHF, JPY, CAD, AUD, NZD, SEK, NOK, DKK, PLN, CZK, HUF, RON, BGN, HRK, TRY, BRL, MXN, CNY, INR, KRW, THB, SGD, HKD, ZAR, AED, ILS, PHP, TWD, MYR, IDR
-
-Exchange rates fetched from ECB and cached locally.
-
----
-
-## Environment Variables
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `PORT` | `3480` | Server port |
-| `SESSION_SECRET` | (auto-generated) | Session signing key — set a persistent one for production |
-| `NODE_ENV` | `development` | `production` for production builds |
-
----
-
-## API
-
-All API routes are under `/api/`:
-
-- `POST /api/auth/login` — Login
-- `POST /api/auth/register` — Register
-- `POST /api/auth/logout` — Logout
-- `GET /api/currencies` — List supported currencies
-- `GET/POST /api/rates` — Fetch exchange rates
-- `GET /api/search?q=` — Search groups, expenses, people
-- `GET/POST /api/groups/{id}` — Group CRUD
-- `POST /api/settle` — Record a settlement
-- `POST /api/groups/{id}/export` — Download CSV
+```
+split/
+├── src/
+│   ├── lib/
+│   │   ├── i18n/          # Translations (en.json, es.json)
+│   │   └── server/
+│   │       ├── auth/       # Session + password handling
+│   │       ├── currency.ts # ECB exchange rates
+│   │       └── db/         # SQLite queries
+│   └── routes/
+│       ├── api/           # REST endpoints
+│       ├── auth/          # Login, register
+│       ├── expense/       # Add, view, edit expenses
+│       ├── groups/        # Groups, members, settle up
+│       ├── people/        # Person detail, balances
+│       └── search/        # Full-text search
+├── static/
+│   ├── fonts/             # Self-hosted typefaces
+│   └── sw.js              # Service worker
+├── ha-addon/              # Home Assistant addon config
+├── Dockerfile
+├── docker-compose.yml
+└── .github/workflows/build.yml
+```
 
 ---
 
