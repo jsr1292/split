@@ -254,10 +254,10 @@
       inputmode="none"
       placeholder="0.00"
       bind:value={amount}
-      onfocus={() => { amountFocused = true; }}
+      onfocus={() => { amountFocused = true; document.body.classList.add('keyboard-open'); }}
       onblur={() => {
         setTimeout(() => {
-          if (!keepBarOpen) amountFocused = false;
+          if (!keepBarOpen) { amountFocused = false; document.body.classList.remove('keyboard-open'); }
         }, 200);
       }}
       style="flex: 1; font-family: 'Libre Baskerville', Georgia, serif; font-size: 20px; text-align: center; padding: 14px;"
@@ -439,7 +439,7 @@
     <div class="numpad-row">
       <button class="numpad-key" onclick={() => tapDigit('.')}>.</button>
       <button class="numpad-key" onclick={() => tapDigit('0')}>0</button>
-      <button class="numpad-key done-key" onclick={() => { amountFocused = false; document.getElementById('amount')?.blur(); }}>OK</button>
+      <button class="numpad-key done-key" onclick={() => { amountFocused = false; document.body.classList.remove('keyboard-open'); document.getElementById('amount')?.blur(); }}>OK</button>
     </div>
   </div>
 {/if}

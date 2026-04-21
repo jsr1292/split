@@ -117,8 +117,8 @@
 <div class="form-group">
   <label for="amount">{t('amount')}</label>
   <input id="amount" type="text" inputmode="none" placeholder="0.00" bind:value={amount}
-    onfocus={() => { amountFocused = true; updateBarBottom(); }}
-    onblur={() => setTimeout(() => { if (!keepBarOpen) amountFocused = false; }, 200)}
+    onfocus={() => { amountFocused = true; document.body.classList.add('keyboard-open'); }}
+    onblur={() => setTimeout(() => { if (!keepBarOpen) { amountFocused = false; document.body.classList.remove('keyboard-open'); } }, 200)}
     style="font-family: 'Libre Baskerville', Georgia, serif; font-size: 20px; text-align: center; padding: 14px;" />
   {#if amount && computedAmount !== null}
     <div style="text-align: center; margin-top: 6px; font-size: 12px; color: var(--gold); font-family: 'Libre Baskerville', Georgia, serif;">
@@ -206,7 +206,7 @@
     <div class="numpad-row">
       <button class="numpad-key" onclick={() => tapDigit('.')}>.</button>
       <button class="numpad-key" onclick={() => tapDigit('0')}>0</button>
-      <button class="numpad-key done-key" onclick={() => { amountFocused = false; document.getElementById('amount')?.blur(); }}>OK</button>
+      <button class="numpad-key done-key" onclick={() => { amountFocused = false; document.body.classList.remove('keyboard-open'); document.getElementById('amount')?.blur(); }}>OK</button>
     </div>
   </div>
 {/if}
