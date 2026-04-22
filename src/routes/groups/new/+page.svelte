@@ -115,22 +115,11 @@
 <!-- Currency Mode -->
 <div class="form-group">
   <label>Currency Mode</label>
-  <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 4px;">
-    <div class:currencymode-active={currencyMode === 'single'} class:currencymode-inactive={currencyMode !== 'single'} onclick={() => currencyMode = 'single'} style="display:flex;align-items:flex-start;gap:8px;padding:10px 12px;border-radius:8px;cursor:pointer;font-size:13px;">
-      <input type="radio" name="currencyMode" value="single" bind:group={currencyMode} style="accent-color:#72D2A2;margin-top:2px;flex-shrink:0;pointer-events:none;" tabindex="-1" />
-      <div style="flex:1;min-width:0;">
-        <div style="font-weight:600;color:var(--text);">Single currency</div>
-        <div style="font-size:11px;color:var(--text3);margin-top:2px;">All balances in {defaultCurrency}. Simple and easy.</div>
-      </div>
-    </div>
-    <div class:currencymode-active={currencyMode === 'fx_lock'} class:currencymode-inactive={currencyMode !== 'fx_lock'} onclick={() => currencyMode = 'fx_lock'} style="display:flex;align-items:flex-start;gap:8px;padding:10px 12px;border-radius:8px;cursor:pointer;font-size:13px;">
-      <input type="radio" name="currencyMode" value="fx_lock" bind:group={currencyMode} style="accent-color:#72D2A2;margin-top:2px;flex-shrink:0;pointer-events:none;" tabindex="-1" />
-      <div style="flex:1;min-width:0;">
-        <div style="font-weight:600;color:var(--text);">Fair FX</div>
-        <div style="font-size:11px;color:var(--text3);margin-top:2px;">Exchange rates locked when expense is added. Fair for mixed currencies.</div>
-      </div>
-    </div>
-  </div>
+  <select bind:value={currencyMode} style="width:100%;">
+    <option value="single">Single currency — All balances in {defaultCurrency}</option>
+    <option value="fx_lock">Fair FX — Exchange rates locked when expense is added</option>
+  </select>
+  <div style="font-size: 11px; color: var(--text3); margin-top: 4px;">{currencyMode === 'fx_lock' ? 'Each share converted at the rate when expense was created. Fair for mixed currencies.' : 'Simple and easy. All balances in one currency.'}</div>
 </div>
 
 <!-- Members -->
