@@ -116,16 +116,16 @@
 <div class="form-group">
   <label>Currency Mode</label>
   <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 4px;">
-    <label style="display: flex; align-items: flex-start; gap: 8px; padding: 10px 12px; border-radius: 8px; border: 1px solid {currencyMode === 'single' ? '#72D2A2' : 'var(--border)'}; background: {currencyMode === 'single' ? 'rgba(114,210,162,0.08)' : 'transparent'}; cursor: pointer; font-size: 13px;">
-      <input type="radio" name="currencyMode" value="single" bind:group={currencyMode} style="accent-color: #72D2A2; margin-top: 2px;" />
-      <div>
+    <label style="display: flex; align-items: flex-start; gap: 8px; padding: 10px 12px; border-radius: 8px; border: 1px solid {currencyMode === 'single' ? '#72D2A2' : 'var(--border)'}; background: {currencyMode === 'single' ? 'rgba(114,210,162,0.08)' : 'transparent'}; cursor: pointer; font-size: 13px; overflow: hidden;">
+      <input type="radio" name="currencyMode" value="single" bind:group={currencyMode} style="accent-color: #72D2A2; margin-top: 2px; flex-shrink: 0;" />
+      <div style="min-width: 0; overflow: hidden;">
         <div style="font-weight: 600; color: var(--text);">Single currency</div>
         <div style="font-size: 11px; color: var(--text3); margin-top: 2px;">All balances in {defaultCurrency}. Simple and easy.</div>
       </div>
     </label>
-    <label style="display: flex; align-items: flex-start; gap: 8px; padding: 10px 12px; border-radius: 8px; border: 1px solid {currencyMode === 'fx_lock' ? '#72D2A2' : 'var(--border)'}; background: {currencyMode === 'fx_lock' ? 'rgba(114,210,162,0.08)' : 'transparent'}; cursor: pointer; font-size: 13px;">
-      <input type="radio" name="currencyMode" value="fx_lock" bind:group={currencyMode} style="accent-color: #72D2A2; margin-top: 2px;" />
-      <div>
+    <label style="display: flex; align-items: flex-start; gap: 8px; padding: 10px 12px; border-radius: 8px; border: 1px solid {currencyMode === 'fx_lock' ? '#72D2A2' : 'var(--border)'}; background: {currencyMode === 'fx_lock' ? 'rgba(114,210,162,0.08)' : 'transparent'}; cursor: pointer; font-size: 13px; overflow: hidden;">
+      <input type="radio" name="currencyMode" value="fx_lock" bind:group={currencyMode} style="accent-color: #72D2A2; margin-top: 2px; flex-shrink: 0;" />
+      <div style="min-width: 0; overflow: hidden;">
         <div style="font-weight: 600; color: var(--text);">Fair FX</div>
         <div style="font-size: 11px; color: var(--text3); margin-top: 2px;">Exchange rates locked when expense is added. Fair for mixed currencies.</div>
       </div>
