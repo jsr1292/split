@@ -800,3 +800,12 @@ label {
   from { opacity: 1; transform: translateX(-50%) translateY(0); }
   to { opacity: 0; transform: translateX(-50%) translateY(10px); }
 }
+
+.currencymode-active {
+  border: 1px solid #72D2A2 !important;
+  background: rgba(114,210,162,0.08) !important;
+}
+.currencymode-inactive {
+  border: 1px solid var(--border) !important;
+  background: transparent !important;
+}
