@@ -83,21 +83,21 @@
 <!-- Currency Mode -->
 <div class="form-group">
   <label>Currency Mode</label>
-  <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 4px; width: 100%;">
-    <label style="display: flex; align-items: flex-start; gap: 8px; padding: 10px 12px; border-radius: 8px; border: 1px solid {currencyMode === 'single' ? '#72D2A2' : 'var(--border)'}; background: {currencyMode === 'single' ? 'rgba(114,210,162,0.08)' : 'transparent'}; cursor: pointer; font-size: 13px; width: 100%; box-sizing: border-box;">
-      <input type="radio" name="currencyMode" value="single" bind:group={currencyMode} style="accent-color: #72D2A2; margin-top: 2px; flex-shrink: 0;" />
-      <div style="flex: 1;">
+  <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 4px;">
+    <div onclick={() => currencyMode = 'single'} style="display: flex; align-items: flex-start; gap: 8px; padding: 10px 12px; border-radius: 8px; border: 1px solid {currencyMode === 'single' ? '#72D2A2' : 'var(--border)'}; background: {currencyMode === 'single' ? 'rgba(114,210,162,0.08)' : 'transparent'}; cursor: pointer; font-size: 13px;">
+      <input type="radio" name="currencyMode" value="single" bind:group={currencyMode} style="accent-color: #72D2A2; margin-top: 2px; flex-shrink: 0; pointer-events: none;" tabindex="-1" />
+      <div>
         <div style="font-weight: 600; color: var(--text);">Single currency</div>
         <div style="font-size: 11px; color: var(--text3); margin-top: 2px;">All balances in {data.group.currency || 'EUR'}. Simple and easy.</div>
       </div>
-    </label>
-    <label style="display: flex; align-items: flex-start; gap: 8px; padding: 10px 12px; border-radius: 8px; border: 1px solid {currencyMode === 'fx_lock' ? '#72D2A2' : 'var(--border)'}; background: {currencyMode === 'fx_lock' ? 'rgba(114,210,162,0.08)' : 'transparent'}; cursor: pointer; font-size: 13px; width: 100%; box-sizing: border-box;">
-      <input type="radio" name="currencyMode" value="fx_lock" bind:group={currencyMode} style="accent-color: #72D2A2; margin-top: 2px; flex-shrink: 0;" />
-      <div style="flex: 1;">
+    </div>
+    <div onclick={() => currencyMode = 'fx_lock'} style="display: flex; align-items: flex-start; gap: 8px; padding: 10px 12px; border-radius: 8px; border: 1px solid {currencyMode === 'fx_lock' ? '#72D2A2' : 'var(--border)'}; background: {currencyMode === 'fx_lock' ? 'rgba(114,210,162,0.08)' : 'transparent'}; cursor: pointer; font-size: 13px;">
+      <input type="radio" name="currencyMode" value="fx_lock" bind:group={currencyMode} style="accent-color: #72D2A2; margin-top: 2px; flex-shrink: 0; pointer-events: none;" tabindex="-1" />
+      <div>
         <div style="font-weight: 600; color: var(--text);">Fair FX</div>
         <div style="font-size: 11px; color: var(--text3); margin-top: 2px;">Exchange rates locked when expense is added. Fair for mixed currencies.</div>
       </div>
-    </label>
+    </div>
   </div>
   {#if currencyMode !== (data.group.currency_mode || 'single')}
     <div style="margin-top: 8px; font-size: 11px; color: #72D2A2; background: rgba(114,210,162,0.08); border: 1px solid rgba(114,210,162,0.2); border-radius: 6px; padding: 8px 10px;">⚠ Balances will be recalculated using the new mode. All historical FX data is preserved.</div>
