@@ -4,7 +4,9 @@ import fs from 'fs';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const DB_PATH = path.join(__dirname, '..', '..', '..', '..', 'data', 'splitwise.db');
+const DB_PATH = process.env.DATA_DIR
+  ? path.join(process.env.DATA_DIR, 'splitwise.db')
+  : path.join(__dirname, '..', '..', '..', '..', 'data', 'splitwise.db');
 
 let db: Database.Database;
 

@@ -1,0 +1,34 @@
+{
+  "name": "Splitrr",
+  "version": "1.0.0",
+  "slug": "splitrr",
+  "description": "Expense splitting made simple — track shared expenses, settle debts, and manage group finances",
+  "startup": "application",
+  "init": false,
+  "ingress": true,
+  "panel_icon": "mdi:cash-multiple",
+  "image": "ghcr.io/jsr1292/splitrr",
+  "arch": [
+    "aarch64",
+    "amd64",
+    "armv7"
+  ],
+  "host_network": true,
+  "map": [
+    "/data"
+  ],
+  "ports": {
+    "3480/tcp": null
+  },
+  "ports_description": {
+    "3480/tcp": "Web interface"
+  },
+  "options": {
+    "registration_enabled": true,
+    "default_currency": "EUR"
+  },
+  "schema": {
+    "registration_enabled": "bool",
+    "default_currency": "str"
+  }
+}

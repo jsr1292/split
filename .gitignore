@@ -36,3 +36,4 @@ vite.config.ts.timestamp-*
 screenshots.cjs
 data/*.db-shm
 data/*.db-wal
+node_modules/

@@ -1,0 +1,6 @@
+name: Splitrr HA
+url: https://github.com/jsr1292/split
+maintainer: jsr1292
+addons:
+  - name: Splitrr
+    slug: addon
