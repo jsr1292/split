@@ -1,6 +1,7 @@
 import { getDb } from './index';
 import { v4 as uuid } from 'uuid';
 import { getCachedRate, convert } from '../currency';
+import { simplifyDebts, type Balance } from '../debt';
 
 export { getDb };
 
@@ -531,7 +532,7 @@ export function getGroupBalances(groupId: string): Balance[] {
     }
   }
 
-  return balances;
+  return simplifyDebts(balances);
 }
 
 export function getUserBalanceInGroup(groupId: string, userId: string): number {
