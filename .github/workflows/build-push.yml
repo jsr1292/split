@@ -23,6 +23,18 @@ jobs:
         id: ver
         run: echo "version=$(jq -r .version addon/config.json)" >> "$GITHUB_OUTPUT"
 
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build SvelteKit app
+        run: npm run build
+
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
 

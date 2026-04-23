@@ -4,24 +4,18 @@ FROM ${BUILD_FROM}
 
 WORKDIR /app
 
-# Install build tools for native modules (better-sqlite3)
+# Install build tools for native modules
 RUN apk add --no-cache python3 make g++
 
-# Copy package files first for caching
+# Copy package files
 COPY package*.json ./
-COPY .npmrc ./
 
-# Install dependencies (skip optional platform-specific bindings)
-RUN npm ci
+# Install production dependencies only (better-sqlite3 needs native compile)
+RUN npm ci --omit=dev
 
-# Copy source code
-COPY . .
-
-# Build the SvelteKit app
-RUN npm run build
-
-# Prune dev deps
-RUN rm -rf node_modules && npm ci --omit=dev
+# Copy pre-built app (built on host before docker build)
+COPY build/ ./build/
+COPY package.json ./
 
 # Clean build tools
 RUN apk del python3 make g++
