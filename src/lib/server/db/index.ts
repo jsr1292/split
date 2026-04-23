@@ -26,12 +26,29 @@ export function getDb(): Database.Database {
 
 function initSchema(db: Database.Database) {
   db.exec(`
+    CREATE TABLE IF NOT EXISTS accounts (
+      id TEXT PRIMARY KEY,
+      email TEXT NOT NULL UNIQUE,
+      password_hash TEXT NOT NULL,
+      name TEXT NOT NULL,
+      created_at TEXT DEFAULT (datetime('now'))
+    );
+
+    CREATE TABLE IF NOT EXISTS sessions (
+      id TEXT PRIMARY KEY,
+      account_id TEXT NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
+      expires_at TEXT NOT NULL,
+      created_at TEXT DEFAULT (datetime('now'))
+    );
+
     CREATE TABLE IF NOT EXISTS users (
       id TEXT PRIMARY KEY,
       name TEXT NOT NULL,
       email TEXT,
       avatar_color TEXT DEFAULT '#c9a84c',
       is_self INTEGER DEFAULT 0,
+      account_id TEXT REFERENCES accounts(id),
+      base_currency TEXT DEFAULT 'EUR',
       created_at TEXT DEFAULT (datetime('now'))
     );
 
@@ -109,6 +126,15 @@ function initSchema(db: Database.Database) {
     CREATE INDEX IF NOT EXISTS idx_settlements_from_user ON settlements(from_user);
     CREATE INDEX IF NOT EXISTS idx_settlements_to_user ON settlements(to_user);
     CREATE INDEX IF NOT EXISTS idx_group_members_user ON group_members(user_id);
+
+    CREATE TABLE IF NOT EXISTS exchange_rates (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      from_currency TEXT NOT NULL,
+      to_currency TEXT NOT NULL,
+      rate REAL NOT NULL,
+      date TEXT NOT NULL
+    );
+
     CREATE INDEX IF NOT EXISTS idx_exchange_rates_lookup ON exchange_rates(from_currency, to_currency, date DESC);
     CREATE UNIQUE INDEX IF NOT EXISTS idx_expenses_idempotency ON expenses(idempotency_key) WHERE idempotency_key IS NOT NULL;
   `);
@@ -125,4 +151,13 @@ function initSchema(db: Database.Database) {
   // Add currency_mode and base_currency to groups for existing databases
   try { db.exec(`ALTER TABLE groups ADD COLUMN currency_mode TEXT DEFAULT 'single'`); } catch {}
   try { db.exec(`ALTER TABLE groups ADD COLUMN base_currency TEXT DEFAULT 'EUR'`); } catch {}
+  try { db.exec(`ALTER TABLE users ADD COLUMN account_id TEXT`); } catch {}
+  try { db.exec(`ALTER TABLE users ADD COLUMN base_currency TEXT DEFAULT 'EUR'`); } catch {}
+  try { db.exec(`ALTER TABLE expenses ADD COLUMN recurring TEXT`); } catch {}
+  try { db.exec(`ALTER TABLE expenses ADD COLUMN recurring_parent_id TEXT`); } catch {}
+  try { db.exec(`ALTER TABLE expenses ADD COLUMN currency TEXT DEFAULT 'EUR'`); } catch {}
+  try { db.exec(`ALTER TABLE expenses ADD COLUMN note TEXT`); } catch {}
+  try { db.exec(`ALTER TABLE expenses ADD COLUMN idempotency_key TEXT`); } catch {}
+  try { db.exec(`ALTER TABLE expense_splits ADD COLUMN base_currency TEXT DEFAULT 'EUR'`); } catch {}
+  try { db.exec(`ALTER TABLE expense_splits ADD COLUMN base_amount REAL`); } catch {}
 }
