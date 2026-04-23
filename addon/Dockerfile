@@ -4,12 +4,15 @@ FROM ${BUILD_FROM}
 
 WORKDIR /app
 
-# Install build tools
+# Install build tools for native modules (better-sqlite3)
 RUN apk add --no-cache python3 make g++
 
-# Copy package files and install dependencies
+# Copy package files first for caching
 COPY package*.json ./
-RUN npm ci && npm cache clean --force
+COPY .npmrc ./
+
+# Install dependencies (skip optional platform-specific bindings)
+RUN npm ci
 
 # Copy source code
 COPY . .
@@ -17,10 +20,13 @@ COPY . .
 # Build the SvelteKit app
 RUN npm run build
 
+# Prune dev deps
+RUN rm -rf node_modules && npm ci --omit=dev
+
 # Clean build tools
 RUN apk del python3 make g++
 
-# Data directory for SQLite database
+# Data directory
 RUN mkdir -p /data
 
 ENV NODE_ENV=production
@@ -29,7 +35,6 @@ ENV DATA_DIR=/data
 
 EXPOSE 3480
 
-# Entrypoint
 COPY addon/entrypoint.sh /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh
 
