@@ -1,5 +1,6 @@
 <script lang="ts">
-  import { t, getSystemLocale } from '$lib/i18n/index.js';
+  import { t, getSystemLocale, getLang } from '$lib/i18n/index.js';
+  import EmptyState from '$lib/components/EmptyState.svelte';
   let { data } = $props();
 
   const fmt = (n: number) => new Intl.NumberFormat(getSystemLocale(), { style: 'currency', currency: data.userBaseCurrency || 'EUR' }).format(n);
@@ -91,11 +92,9 @@
   {/each}
 
 {:else}
-  <div style="text-align: center; padding: 60px 20px;">
-    <div style="font-size: 48px; margin-bottom: 16px;">👋</div>
-    <div style="font-size: 14px; font-weight: 500; margin-bottom: 8px;">{t('welcome')}</div>
-    <div style="font-size: 12px; color: var(--text3); margin-bottom: 20px;">{t('get_started')}</div>
-    <a href="/groups/new"><button class="btn-gold">{t('create_group')}</button></a>
+  <div style="text-align: center; padding: 40px 20px;">
+    <EmptyState variant="no-groups" subtitle={t('get_started')} />
+    <a href="/groups/new" style="display: inline-block; margin-top: 8px;"><button class="btn-gold">{t('create_group')}</button></a>
   </div>
 {/if}
 {/key}

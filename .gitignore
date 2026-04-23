@@ -34,3 +34,5 @@ test-screenshots.cjs
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 screenshots.cjs
+data/*.db-shm
+data/*.db-wal

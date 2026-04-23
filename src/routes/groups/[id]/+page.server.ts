@@ -1,10 +1,16 @@
 import type { PageServerLoad } from './$types';
-import { getGroupById, getGroupMembers, getExpensesByGroup, getGroupBalances, getSettlements, getUserBalanceInGroup, getSelfUser, getDb } from '$lib/server/db/queries';
+import { getGroupById, getGroupMembers, getExpensesByGroup, getGroupBalances, getSettlements, getUserBalanceInGroup, getSelfUser, isGroupMember } from '$lib/server/db/queries';
+import { error } from '@sveltejs/kit';
 
 export const load: PageServerLoad = async ({ params, locals }) => {
   const self = getSelfUser(locals.user?.id) as any;
   const group = getGroupById(params.id) as any;
-  if (!group) return { group: null };
+  if (!group) throw error(404, 'Group not found');
+
+  // Membership check — reject if user is not in this group
+  if (self && !isGroupMember(params.id, self.id)) {
+    throw error(403, 'You are not a member of this group');
+  }
 
   const members = getGroupMembers(params.id);
   const expenses = getExpensesByGroup(params.id);
@@ -23,19 +29,15 @@ export const load: PageServerLoad = async ({ params, locals }) => {
   const categories = Object.values(catMap).sort((a: any, b: any) => b.total - a.total);
 
   // Who should pay next: person with most negative balance (owes the most)
-  // Calculate net balance per member
   const netBalances: Record<string, number> = {};
   for (const m of members) {
     netBalances[m.id] = 0;
   }
   for (const b of balances) {
-    // b.from_user owes b.to_user amount b.amount
-    // from_user's balance decreases (they owe), to_user's balance increases (they are owed)
     netBalances[b.from_user] = (netBalances[b.from_user] || 0) - b.amount;
     netBalances[b.to_user] = (netBalances[b.to_user] || 0) + b.amount;
   }
 
-  // Find member with most negative balance (owes most)
   let suggestedPayer: any = null;
   let minBalance = Infinity;
   for (const m of members) {
@@ -45,7 +47,6 @@ export const load: PageServerLoad = async ({ params, locals }) => {
       suggestedPayer = m;
     }
   }
-  // If everyone is at 0, pick the self user
   if (!suggestedPayer && self) {
     suggestedPayer = members.find((m: any) => m.id === self.id) || members[0];
   }

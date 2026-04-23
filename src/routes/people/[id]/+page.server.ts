@@ -1,34 +1,36 @@
-import { getUserById, getAllGroups, getGroupBalances, getSelfUser, getSharedExpenses, getDb } from '$lib/server/db/queries';
+import { getUserById, getGroupsForUser, getGroupBalances, getSelfUser, getSharedExpenses, getDb } from '$lib/server/db/queries';
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async ({ params }) => {
+export const load: PageServerLoad = async ({ params, locals }) => {
+  const self = getSelfUser(locals.user?.id) as any;
+  if (!self) throw error(401, 'Not authenticated');
+
   const person = getUserById(params.id);
   if (!person) throw error(404, 'Person not found');
-  const self = getSelfUser() as any;
-  const groups = getAllGroups();
 
-  // Batch-fetch all group members in one query
-  const allGroupIds = groups.map((g: any) => g.id);
-  const membersByGroup: Record<string, string[]> = {};
-  if (allGroupIds.length > 0) {
-    const allMembers = getDb().prepare(`
-      SELECT gm.group_id, gm.user_id FROM group_members gm WHERE gm.group_id IN (${allGroupIds.map(() => '?').join(',')})
-    `).all(...allGroupIds) as any[];
-    for (const m of allMembers) {
-      if (!membersByGroup[m.group_id]) membersByGroup[m.group_id] = [];
-      membersByGroup[m.group_id].push(m.user_id);
-    }
+  // Get only groups the current user is in
+  const groups = getGroupsForUser(self.id);
+  const groupIds = groups.map((g: any) => g.id);
+
+  // Find which of those groups the requested person is also in
+  let actualSharedGroups: any[] = [];
+  if (groupIds.length > 0) {
+    const placeholders = groupIds.map(() => '?').join(',');
+    const personMemberships = getDb().prepare(`
+      SELECT group_id FROM group_members WHERE user_id = ? AND group_id IN (${placeholders})
+    `).all(params.id, ...groupIds) as any[];
+    const sharedGroupIds = new Set(personMemberships.map((m: any) => m.group_id));
+    actualSharedGroups = groups.filter((g: any) => sharedGroupIds.has(g.id));
   }
 
-  // Find groups shared with this person (using the batch-fetched data)
-  const sharedGroups = groups.filter((g: any) => {
-    const memberIds = membersByGroup[g.id] || [];
-    return memberIds.includes(params.id);
-  });
+  // If no shared groups, person has nothing to do with this user
+  if (actualSharedGroups.length === 0 && person.id !== self.id) {
+    throw error(403, 'You do not share any groups with this person');
+  }
 
   // For each shared group, get balance
-  const groupBalances = sharedGroups.map((g: any) => {
+  const groupBalances = actualSharedGroups.map((g: any) => {
     const balances = getGroupBalances(g.id);
     let owed = 0;
     for (const b of balances) {

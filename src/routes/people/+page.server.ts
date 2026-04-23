@@ -1,8 +1,10 @@
 import type { PageServerLoad } from './$types';
-import { getAllUsers, getSelfUser } from '$lib/server/db/queries';
+import { getUsersInSharedGroups, getSelfUser } from '$lib/server/db/queries';
 
 export const load: PageServerLoad = async ({ locals }) => {
   const self = getSelfUser(locals.user?.id) as any;
-  const people = getAllUsers();
+  if (!self) return { people: [], self };
+
+  const people = getUsersInSharedGroups(self.id);
   return { people, self };
 };

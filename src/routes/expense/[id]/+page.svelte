@@ -91,7 +91,7 @@
           <div style="display: flex; flex-wrap: wrap; gap: 4px;">
             {#each item.splits as split}
               <div style="display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--text3);">
-                <span style="width: 14px; height: 14px; border-radius: 50%; background: {split.user_color}; display: inline-flex; align-items: center; justify-content: center; font-size: 7px; font-weight: 700; color: #0a0d14;">{split.user_name[0]}</span>
+                <span style="width: 14px; height: 14px; border-radius: 50%; background: {split.user_color}; display: inline-flex; align-items: center; justify-content: center; font-size: 7px; font-weight: 700; color: var(--avatar-text);">{split.user_name[0]}</span>
                 {split.user_name}: {fmt(split.share, exp.currency || 'EUR')}
               </div>
             {/each}

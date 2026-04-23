@@ -177,7 +177,7 @@
     {#each data.members as m}
       <button onclick={() => toggleMember(m.id)}
         style="display: flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 20px; border: 1px solid {selectedMembers.includes(m.id) ? 'var(--gold)' : 'var(--border)'}; background: {selectedMembers.includes(m.id) ? 'rgba(201,168,76,0.1)' : 'transparent'}; cursor: pointer; color: {selectedMembers.includes(m.id) ? 'var(--gold)' : 'var(--text3)'}; font-family: inherit; font-size: 11px;">
-        <span style="width: 20px; height: 20px; border-radius: 50%; background: {m.avatar_color}; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #0a0d14;">{m.name[0]}</span>
+        <span style="width: 20px; height: 20px; border-radius: 50%; background: {m.avatar_color}; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: var(--avatar-text);">{m.name[0]}</span>
         {m.name}
       </button>
     {/each}

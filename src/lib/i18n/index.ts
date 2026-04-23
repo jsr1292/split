@@ -46,11 +46,20 @@ export function getLocale(): string {
 }
 
 // System locale for number/currency formatting — always follows the device, not the app UI language
+// Locale resolved once on first client load and stored, so SSR and client match
+let _resolvedLocale: string | null = null;
+
 export function getSystemLocale(): string {
+  if (_resolvedLocale) return _resolvedLocale;
   if (typeof navigator !== 'undefined') {
-    return navigator.language || navigator.languages?.[0] || 'es-ES';
+    _resolvedLocale = navigator.language || navigator.languages?.[0] || 'es-ES';
+    return _resolvedLocale;
   }
   return 'es-ES';
+}
+
+export function setSystemLocale(locale: string) {
+  _resolvedLocale = locale;
 }
 
 export function getLangLabel(): string {

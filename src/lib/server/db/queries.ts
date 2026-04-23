@@ -53,6 +53,38 @@ export function getAllGroups() {
   `).all();
 }
 
+// Groups filtered by membership — only groups the user belongs to
+export function getGroupsForUser(userId: string) {
+  return getDb().prepare(`
+    SELECT g.*, 
+      COUNT(DISTINCT gm2.user_id) as member_count,
+      COUNT(DISTINCT e.id) as expense_count
+    FROM groups g
+    JOIN group_members gm ON g.id = gm.group_id AND gm.user_id = ?
+    LEFT JOIN group_members gm2 ON g.id = gm2.group_id
+    LEFT JOIN expenses e ON g.id = e.group_id
+    GROUP BY g.id
+    ORDER BY g.created_at DESC
+  `).all(userId);
+}
+
+// Check if user is a member of a group
+export function isGroupMember(groupId: string, userId: string): boolean {
+  const row = getDb().prepare('SELECT 1 FROM group_members WHERE group_id = ? AND user_id = ?').get(groupId, userId);
+  return !!row;
+}
+
+// Get users that share any group with the given user
+export function getUsersInSharedGroups(userId: string) {
+  return getDb().prepare(`
+    SELECT DISTINCT u.* FROM users u
+    JOIN group_members gm1 ON u.id = gm1.user_id
+    JOIN group_members gm2 ON gm1.group_id = gm2.group_id
+    WHERE gm2.user_id = ?
+    ORDER BY u.name
+  `).all(userId);
+}
+
 export function getGroupById(id: string) {
   return getDb().prepare('SELECT * FROM groups WHERE id = ?').get(id);
 }
@@ -568,16 +600,22 @@ export function updateGroup(id: string, name: string, emoji: string, memberIds: 
 // ── DASHBOARD ──
 
 export function getDashboard(selfUserId: string) {
-  const groups = getAllGroups();
-  const recentExpenses = getDb().prepare(`
-    SELECT e.*, g.name as group_name, g.emoji as group_emoji,
-      u.name as paid_by_name
-    FROM expenses e
-    JOIN groups g ON e.group_id = g.id
-    JOIN users u ON e.paid_by = u.id
-    ORDER BY e.date DESC, e.created_at DESC
-    LIMIT 10
-  `).all();
+  const groups = getGroupsForUser(selfUserId);
+  const groupIds = groups.map((g: any) => g.id);
+  let recentExpenses: any[] = [];
+  if (groupIds.length > 0) {
+    const placeholders = groupIds.map(() => '?').join(',');
+    recentExpenses = getDb().prepare(`
+      SELECT e.*, g.name as group_name, g.emoji as group_emoji,
+        u.name as paid_by_name
+      FROM expenses e
+      JOIN groups g ON e.group_id = g.id
+      JOIN users u ON e.paid_by = u.id
+      WHERE e.group_id IN (${placeholders})
+      ORDER BY e.date DESC, e.created_at DESC
+      LIMIT 10
+    `).all(...groupIds);
+  }
 
   // Batch: compute all group balances in a single query (was N queries, now 1)
   const balancesByGroup = getUserBalancesForGroups(
