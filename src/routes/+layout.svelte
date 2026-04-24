@@ -13,18 +13,36 @@
   let currentTheme = $state('dark');
   let pwaTopOffset = $state(0);
 
-  // Track keyboard state for operator bar visibility
+  // Track keyboard state for nav/toolbar visibility
   $effect(() => {
     if (!browser) return;
     function onResize() {
       const isOpen = visualViewport ? visualViewport.height < window.innerHeight * 0.85 : false;
       document.body.classList.toggle('keyboard-open', isOpen);
     }
+    // Also immediately detect focus on inputs/textareas
+    function onFocusIn(e: FocusEvent) {
+      if ((e.target as HTMLElement)?.tagName === 'INPUT' || (e.target as HTMLElement)?.tagName === 'TEXTAREA') {
+        document.body.classList.add('keyboard-open');
+      }
+    }
+    function onFocusOut(e: FocusEvent) {
+      if ((e.target as HTMLElement)?.tagName === 'INPUT' || (e.target as HTMLElement)?.tagName === 'TEXTAREA') {
+        // Small delay to allow viewport resize to take over
+        setTimeout(onResize, 100);
+      }
+    }
     if (visualViewport) {
       visualViewport.addEventListener('resize', onResize);
       onResize();
     }
-    return () => { visualViewport?.removeEventListener('resize', onResize); };
+    document.addEventListener('focusin', onFocusIn);
+    document.addEventListener('focusout', onFocusOut);
+    return () => {
+      visualViewport?.removeEventListener('resize', onResize);
+      document.removeEventListener('focusin', onFocusIn);
+      document.removeEventListener('focusout', onFocusOut);
+    };
   });
 
   if (browser) {
