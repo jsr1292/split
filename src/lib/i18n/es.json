@@ -220,5 +220,9 @@
   "success": "Éxito",
   "loading": "Cargando...",
   "undo_settlement": "Deshacer liquidación",
-  "confirm_undo": "¿Deshacer esta liquidación?"
+  "confirm_undo": "¿Deshacer esta liquidación?",
+  "no_account_ghost": "Sin cuenta (usuario fantasma)",
+  "ghost_claim_prompt": "¿Eres uno de ellos? Reclama tu plaza para heredar todos los gastos y saldos pasados.",
+  "thats_me": "¡Soy yo!",
+  "im_new": "Soy nuevo aquí"
 }

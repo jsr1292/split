@@ -220,5 +220,9 @@
   "success": "Success",
   "loading": "Loading...",
   "undo_settlement": "Undo settlement",
-  "confirm_undo": "Undo this settlement?"
+  "confirm_undo": "Undo this settlement?",
+  "no_account_ghost": "No account (ghost user)",
+  "ghost_claim_prompt": "Is one of these you? Claim your spot to inherit all past expenses and balances.",
+  "thats_me": "That's me!",
+  "im_new": "I'm new here"
 }

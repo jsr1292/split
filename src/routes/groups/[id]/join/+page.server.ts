@@ -1,7 +1,7 @@
 import type { PageServerLoad } from './$types';
 import { redirect } from '@sveltejs/kit';
 import { getGroupById, getGroupMembers, getDb } from '$lib/server/db/queries';
-import { v4 as uuid } from 'uuid';
+import { getSelfUser } from '$lib/server/db/queries';
 
 export const load: PageServerLoad = async ({ params, locals }) => {
   const group = getGroupById(params.id);
@@ -15,11 +15,15 @@ export const load: PageServerLoad = async ({ params, locals }) => {
   const members = getGroupMembers(params.id);
   const isMember = members.some((m: any) => m.id === locals.userId);
 
-  if (!isMember) {
-    const db = getDb();
-    db.prepare('INSERT OR IGNORE INTO group_members (group_id, user_id) VALUES (?, ?)')
-      .run(params.id, locals.userId);
+  if (isMember) {
+    throw redirect(302, `/groups/${params.id}`);
   }
 
-  throw redirect(302, `/groups/${params.id}`);
+  // Get ghost users in this group (users without accounts)
+  const ghostUsers = members.filter((m: any) => !m.account_id);
+
+  return {
+    group,
+    ghostUsers: ghostUsers.length > 0 ? ghostUsers : null
+  };
 };
