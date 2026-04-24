@@ -32,7 +32,4 @@ EXPOSE 3480
 COPY addon/entrypoint.sh /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh
 
-RUN chown -R node:node /app /data
-USER node
-
 CMD ["/app/entrypoint.sh"]
