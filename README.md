@@ -10,6 +10,14 @@
 
 ---
 
+## Screenshots
+
+| Login | Dashboard | Groups | People |
+|:-----:|:---------:|:------:|:------:|
+| ![Login](screenshots/01-login.png) | ![Dashboard](screenshots/02-dashboard.png) | ![Groups](screenshots/03-groups.png) | ![People](screenshots/04-people.png) |
+
+---
+
 ## Features
 
 ### Core
