@@ -327,7 +327,7 @@ export function createExpenseWithItems(
 
   // Idempotency check
   if (idempotencyKey) {
-    const existing = db.prepare('SELECT id FROM expenses WHERE id = (SELECT expense_id FROM idempotency_keys WHERE key = ?)').get(idempotencyKey);
+    const existing = db.prepare('SELECT * FROM expenses WHERE idempotency_key = ?').get(idempotencyKey);
     if (existing) return { expense: getExpenseById(existing.id), created: false };
   }
 
